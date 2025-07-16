@@ -1,0 +1,20 @@
+import 'package:fingerprintmis8/attendance_view_page.dart';
+import 'package:fingerprintmis8/instructor_settings_page.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'instructor_courses_page.dart';
+import 'fingerprint_enrollment_page.dart';
+import 'export_excel_report_page.dart';
+
+=======
+import 'package:fingerprintmis8/attendance_page.dart';
+import 'package:fingerprintmis8/attendance_view_page.dart';
+import 'package:fingerprintmis8/instructor_settings_page.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'instructor_courses_page.dart';
+import 'fingerprint_enrollment_page.dart';
+import 'export_excel_report_page.dart';
+import 'instructor_analytics_page.dart';
