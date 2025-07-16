@@ -1,31 +1,5 @@
 {
-  "flutter": {
-    "platforms": {
-      "android": {
-        "default": {
-          "projectId": "fingerprintmis8",
-          "appId": "1:576307212775:android:00a9c0aaa18df0aa8c4d42",
-          "fileOutput": "android/app/google-services.json"
-        }
-      },
-      "dart": {
-        "lib/firebase_options.dart": {
-          "projectId": "fingerprintmis8",
-          "configurations": {
-            "android": "1:576307212775:android:00a9c0aaa18df0aa8c4d42",
-            "ios": "1:576307212775:ios:40ea704d927b4ae78c4d42",
-            "macos": "1:576307212775:ios:40ea704d927b4ae78c4d42",
-            "web": "1:576307212775:web:76fc6707ef5a4fa88c4d42",
-            "windows": "1:576307212775:web:030ff1d98bf6e91b8c4d42"
-          }
-        }
-      }
-    }
-  },
-  "firestore": {
-    "database": "(default)",
-    "location": "nam5",
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
+  "functions": {
+    "source": "functions"
   }
 }
