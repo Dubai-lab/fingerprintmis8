@@ -51,40 +51,105 @@ class _AdminRegistrationPageState extends State<AdminRegistrationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Admin Registration'),
+        backgroundColor: Colors.deepPurple.shade600,
+        elevation: 0,
+        title: Text(
+          'Admin Registration',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-      body: Padding(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade200, Colors.deepPurple.shade600],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         padding: EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Text('Status: $_status'),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Admin Name'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter admin name' : null,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              color: Colors.white.withOpacity(0.9),
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Admin Registration',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Text('Status: $_status', style: TextStyle(color: Colors.redAccent)),
+                      SizedBox(height: 10),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: 'Admin Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.person, color: Colors.deepPurple),
+                        ),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Enter admin name' : null,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.email, color: Colors.deepPurple),
+                        ),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Enter email' : null,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.lock, color: Colors.deepPurple),
+                        ),
+                        obscureText: true,
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Enter password' : null,
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _saveAdmin,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(double.infinity, 50),
+                          backgroundColor: Colors.deepPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text('Save Admin', style: TextStyle(fontSize: 18, color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter email' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter password' : null,
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _saveAdmin,
-                child: Text('Save Admin'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

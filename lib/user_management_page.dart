@@ -134,48 +134,76 @@ class _UserManagementPageState extends State<UserManagementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Management'),
+        backgroundColor: Colors.deepPurple.shade600,
+        elevation: 0,
+        title: Text(
+          'User Management',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: InputDecoration(
-                labelText: 'Search by name or registration number',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade200, Colors.deepPurple.shade600],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              color: Colors.white.withOpacity(0.9),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  children: [
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: 'Search by name or registration number',
+                        prefixIcon: Icon(Icons.search, color: Colors.deepPurple),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        _searchQuery = value;
+                        _applyFilters();
+                      },
+                    ),
+                    SizedBox(height: 12),
+                    DropdownButton<UserType>(
+                      value: _selectedUserType,
+                      isExpanded: true,
+                      items: const [
+                        DropdownMenuItem(value: UserType.all, child: Text('All Users')),
+                        DropdownMenuItem(value: UserType.students, child: Text('Students')),
+                        DropdownMenuItem(value: UserType.instructors, child: Text('Instructors')),
+                        DropdownMenuItem(value: UserType.invigilators, child: Text('Invigilators')),
+                        DropdownMenuItem(value: UserType.admins, child: Text('Admins')),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedUserType = value;
+                            _applyFilters();
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
-              onChanged: (value) {
-                _searchQuery = value;
-                _applyFilters();
-              },
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: DropdownButton<UserType>(
-              value: _selectedUserType,
-              isExpanded: true,
-              items: const [
-                DropdownMenuItem(value: UserType.all, child: Text('All Users')),
-                DropdownMenuItem(value: UserType.students, child: Text('Students')),
-                DropdownMenuItem(value: UserType.instructors, child: Text('Instructors')),
-                DropdownMenuItem(value: UserType.invigilators, child: Text('Invigilators')),
-                DropdownMenuItem(value: UserType.admins, child: Text('Admins')),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _selectedUserType = value;
-                    _applyFilters();
-                  });
-                }
-              },
-            ),
-          ),
-          Expanded(child: _buildUserList()),
-        ],
+            SizedBox(height: 12),
+            Expanded(child: _buildUserList()),
+          ],
+        ),
       ),
     );
   }

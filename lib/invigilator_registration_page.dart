@@ -11,8 +11,6 @@ class _InvigilatorRegistrationPageState extends State<InvigilatorRegistrationPag
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
   String _status = 'Idle';
 
   Future<void> _saveInvigilator() async {
@@ -20,7 +18,9 @@ class _InvigilatorRegistrationPageState extends State<InvigilatorRegistrationPag
 
     String name = _nameController.text.trim();
     String email = _emailController.text.trim();
-    String password = _passwordController.text.trim();
+
+    // Generate a default password
+    String password = 'DefaultPass123!'; // You can generate a random password here
 
     try {
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -32,13 +32,14 @@ class _InvigilatorRegistrationPageState extends State<InvigilatorRegistrationPag
         'name': name,
         'email': email,
         'role': 'invigilator',
+        'defaultPassword': true,
+        'passwordSetTime': DateTime.now().toIso8601String(),
       });
 
       setState(() {
         _status = 'Invigilator registered successfully';
         _nameController.clear();
         _emailController.clear();
-        _passwordController.clear();
       });
     } catch (e) {
       setState(() {
@@ -51,40 +52,91 @@ class _InvigilatorRegistrationPageState extends State<InvigilatorRegistrationPag
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Invigilator Registration'),
+        backgroundColor: Colors.deepPurple.shade600,
+        elevation: 0,
+        title: Text(
+          'Invigilator Registration',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-      body: Padding(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade200, Colors.deepPurple.shade600],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         padding: EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Text('Status: $_status'),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Invigilator Name'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter invigilator name' : null,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              color: Colors.white.withOpacity(0.9),
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Invigilator Registration',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Text('Status: $_status', style: TextStyle(color: Colors.redAccent)),
+                      SizedBox(height: 10),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: 'Invigilator Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.person, color: Colors.deepPurple),
+                        ),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Enter invigilator name' : null,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.email, color: Colors.deepPurple),
+                        ),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Enter email' : null,
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _saveInvigilator,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(double.infinity, 50),
+                          backgroundColor: Colors.deepPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text('Save Invigilator', style: TextStyle(fontSize: 18, color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter email' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter password' : null,
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _saveInvigilator,
-                child: Text('Save Invigilator'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

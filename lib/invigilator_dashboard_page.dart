@@ -1,8 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class InvigilatorDashboardPage extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class InvigilatorDashboardPage extends StatefulWidget {
   const InvigilatorDashboardPage({Key? key}) : super(key: key);
+
+  @override
+  _InvigilatorDashboardPageState createState() => _InvigilatorDashboardPageState();
+}
+
+class _InvigilatorDashboardPageState extends State<InvigilatorDashboardPage> {
+  bool _showChangePasswordPrompt = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkDefaultPassword();
+  }
+
+  void _checkDefaultPassword() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (userId.isEmpty) return;
+
+    final userDoc = await FirebaseFirestore.instance.collection('invigilators').doc(userId).get();
+    if (userDoc.exists) {
+      bool defaultPassword = userDoc.get('defaultPassword') ?? false;
+      if (defaultPassword) {
+        setState(() {
+          _showChangePasswordPrompt = true;
+        });
+      }
+    }
+  }
 
   void _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
@@ -67,6 +99,24 @@ class InvigilatorDashboardPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (_showChangePasswordPrompt)
+              Card(
+                color: Colors.amber.shade100,
+                margin: EdgeInsets.only(bottom: 20),
+                child: ListTile(
+                  leading: Icon(Icons.warning, color: Colors.amber.shade800),
+                  title: Text(
+                    'You are using a default password. Please change it.',
+                    style: TextStyle(color: Colors.amber.shade800, fontWeight: FontWeight.bold),
+                  ),
+                    trailing: ElevatedButton(
+                      child: Text('Change Password'),
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/change-password');
+                      },
+                    ),
+                ),
+              ),
             Text(
               'Welcome to the Invigilator Dashboard',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),

@@ -69,52 +69,124 @@ class _StudentRegistrationPageState extends State<StudentRegistrationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Student Registration'),
+        backgroundColor: Colors.deepPurple.shade600,
+        elevation: 0,
+        title: Text(
+          'Student Registration',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-      body: Padding(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade200, Colors.deepPurple.shade600],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         padding: EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              Text('Status: $_status'),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Student Name'),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter student name' : null,
+        child: Center(
+          child: SingleChildScrollView(
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              color: Colors.white.withOpacity(0.9),
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Student Registration',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Text('Status: $_status', style: TextStyle(color: Colors.redAccent)),
+                      SizedBox(height: 10),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: 'Student Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.person, color: Colors.deepPurple),
+                        ),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Enter student name' : null,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _regNumberController,
+                        decoration: InputDecoration(
+                          labelText: 'Registration Number',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.confirmation_number, color: Colors.deepPurple),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Enter registration number';
+                          }
+                          final regExp = RegExp(r'^\d{5}/\d{4}$');
+                          if (!regExp.hasMatch(value)) {
+                            return 'Enter registration number in format 5digits/year';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _departmentController,
+                        decoration: InputDecoration(
+                          labelText: 'Department',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.school, color: Colors.deepPurple),
+                        ),
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Enter department' : null,
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _navigateToFingerprintCapture,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(double.infinity, 50),
+                          backgroundColor: Colors.deepPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text('Fingerprint Capture', style: TextStyle(fontSize: 18, color: Colors.white)),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _saveStudent,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(double.infinity, 50),
+                          backgroundColor: Colors.deepPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text('Save Student', style: TextStyle(fontSize: 18, color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-          TextFormField(
-            controller: _regNumberController,
-            decoration: InputDecoration(labelText: 'Registration Number'),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Enter registration number';
-              }
-              final regExp = RegExp(r'^\d{5}/\d{4}$');
-              if (!regExp.hasMatch(value)) {
-                return 'Enter registration number in format 5digits/year';
-              }
-              return null;
-            },
-          ),
-          TextFormField(
-            controller: _departmentController,
-            decoration: InputDecoration(labelText: 'Department'),
-            validator: (value) =>
-                value == null || value.isEmpty ? 'Enter department' : null,
-          ),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _navigateToFingerprintCapture,
-            child: Text('Fingerprint Capture'),
-          ),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _saveStudent,
-            child: Text('Save Student'),
-          ),
-            ],
+            ),
           ),
         ),
       ),

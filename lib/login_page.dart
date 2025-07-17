@@ -35,20 +35,34 @@ class _LoginPageState extends State<LoginPage> {
       // Fetch user role from Firestore
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('instructors').doc(userCredential.user!.uid).get();
       String? role;
+      bool defaultPassword = false;
+      String? passwordSetTimeStr;
       if (userDoc.exists) {
         role = userDoc.get('role');
+        final data = userDoc.data() as Map<String, dynamic>?;
+        defaultPassword = data != null && data.containsKey('defaultPassword') ? data['defaultPassword'] : false;
+        passwordSetTimeStr = data != null && data.containsKey('passwordSetTime') ? data['passwordSetTime'] : null;
       } else {
         userDoc = await FirebaseFirestore.instance.collection('invigilators').doc(userCredential.user!.uid).get();
         if (userDoc.exists) {
           role = userDoc.get('role');
+          final data = userDoc.data() as Map<String, dynamic>?;
+          defaultPassword = data != null && data.containsKey('defaultPassword') ? data['defaultPassword'] : false;
+          passwordSetTimeStr = data != null && data.containsKey('passwordSetTime') ? data['passwordSetTime'] : null;
         } else {
           userDoc = await FirebaseFirestore.instance.collection('admins').doc(userCredential.user!.uid).get();
           if (userDoc.exists) {
             role = userDoc.get('role');
+          final data = userDoc.data() as Map<String, dynamic>?;
+          defaultPassword = data != null && data.containsKey('defaultPassword') ? data['defaultPassword'] : false;
+          passwordSetTimeStr = data != null && data.containsKey('passwordSetTime') ? data['passwordSetTime'] : null;
           } else {
             userDoc = await FirebaseFirestore.instance.collection('security').doc(userCredential.user!.uid).get();
             if (userDoc.exists) {
               role = 'security';
+          final data = userDoc.data() as Map<String, dynamic>?;
+          defaultPassword = data != null && data.containsKey('defaultPassword') ? data['defaultPassword'] : false;
+          passwordSetTimeStr = data != null && data.containsKey('passwordSetTime') ? data['passwordSetTime'] : null;
             }
           }
         }
@@ -57,6 +71,21 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         _status = 'Login successful';
       });
+
+      // Check if user has default password and if 24 hours have passed
+      if (defaultPassword && passwordSetTimeStr != null) {
+        String roleStr = role ?? '';
+        if (roleStr != 'admin') {
+          DateTime passwordSetTime = DateTime.parse(passwordSetTimeStr);
+          DateTime now = DateTime.now();
+          Duration diff = now.difference(passwordSetTime);
+          if (diff.inHours >= 24) {
+            // Redirect to password change page
+            Navigator.pushReplacementNamed(context, '/change-password');
+            return;
+          }
+        }
+      }
 
       if (role == 'instructor') {
         Navigator.pushReplacementNamed(context, '/instructor_dashboard');

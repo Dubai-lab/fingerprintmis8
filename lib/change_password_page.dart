@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({Key? key}) : super(key: key);
@@ -10,57 +11,67 @@ class ChangePasswordPage extends StatefulWidget {
 
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _currentPasswordController = TextEditingController();
-  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  bool _isChangingPassword = false;
+  String _status = 'Idle';
+  bool _loading = false;
 
   Future<void> _changePassword() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState == null || !_formKey.currentState!.validate()) return;
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      setState(() {
+        _status = 'Passwords do not match';
+      });
+      return;
+    }
 
     setState(() {
-      _isChangingPassword = true;
+      _loading = true;
+      _status = 'Changing password...';
     });
 
     try {
       User? user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('No user logged in');
+      if (user == null) {
+        setState(() {
+          _status = 'No user logged in';
+          _loading = false;
+        });
+        return;
+      }
 
-      // Re-authenticate user with current password
-      final cred = EmailAuthProvider.credential(
-        email: user.email!,
-        password: _currentPasswordController.text,
-      );
-      await user.reauthenticateWithCredential(cred);
+      await user.updatePassword(_passwordController.text);
+      await user.reload();
 
-      // Update password
-      await user.updatePassword(_newPasswordController.text);
+      // Update Firestore to clear defaultPassword flag
+      await FirebaseFirestore.instance.collection('instructors').doc(user.uid).update({
+        'defaultPassword': false,
+        'passwordSetTime': null,
+      }).catchError((_) async {
+        // Try other collections if not found in instructors
+        await FirebaseFirestore.instance.collection('invigilators').doc(user.uid).update({
+          'defaultPassword': false,
+          'passwordSetTime': null,
+        });
+      });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password changed successfully')),
-      );
+      setState(() {
+        _status = 'Password changed successfully';
+      });
 
-      _currentPasswordController.clear();
-      _newPasswordController.clear();
-      _confirmPasswordController.clear();
+      // Navigate to appropriate dashboard or login page
+      Navigator.pushReplacementNamed(context, '/login');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to change password: $e')),
-      );
+      setState(() {
+        _status = 'Failed to change password: $e';
+      });
     } finally {
       setState(() {
-        _isChangingPassword = false;
+        _loading = false;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _currentPasswordController.dispose();
-    _newPasswordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
   }
 
   @override
@@ -68,54 +79,93 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Change Password'),
+        backgroundColor: Colors.deepPurple,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _currentPasswordController,
-                decoration: InputDecoration(labelText: 'Current Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your current password';
-                  }
-                  return null;
-                },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade200, Colors.deepPurple.shade600],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        padding: EdgeInsets.all(16),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              color: Colors.white.withOpacity(0.9),
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Change Your Password',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'New Password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.lock_outline, color: Colors.deepPurple),
+                        ),
+                        obscureText: true,
+                        validator: (value) =>
+                            value == null || value.length < 6 ? 'Password must be at least 6 characters' : null,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm New Password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.lock_outline, color: Colors.deepPurple),
+                        ),
+                        obscureText: true,
+                        validator: (value) =>
+                            value == null || value.length < 6 ? 'Password must be at least 6 characters' : null,
+                      ),
+                      SizedBox(height: 24),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(double.infinity, 50),
+                          backgroundColor: Colors.deepPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: _loading ? null : _changePassword,
+                        child: _loading
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                'Change Password',
+                                style: TextStyle(fontSize: 18, color: Colors.white),
+                              ),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        _status,
+                        style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              TextFormField(
-                controller: _newPasswordController,
-                decoration: InputDecoration(labelText: 'New Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.length < 6) {
-                    return 'New password must be at least 6 characters';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _confirmPasswordController,
-                decoration: InputDecoration(labelText: 'Confirm New Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value != _newPasswordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _isChangingPassword ? null : _changePassword,
-                child: _isChangingPassword
-                    ? CircularProgressIndicator(color: Colors.white)
-                    : Text('Change Password'),
-              ),
-            ],
+            ),
           ),
         ),
       ),

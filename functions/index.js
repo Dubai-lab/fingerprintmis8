@@ -14,30 +14,52 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Sends an email when a new user document is created in Firestore
 exports.sendWelcomeEmail = functions.firestore
-  .document('users/{userId}')
+  .document('{collectionId}/{userId}')
   .onCreate(async (snap, context) => {
     const userData = snap.data();
     const email = userData.email;
-    const password = userData.password; // Assuming password is stored here (consider security implications)
+    const collectionId = context.params.collectionId;
 
-    const mailOptions = {
-      from: 'Your App <eg8217178@gmail.com>',
-      to: email,
-      subject: 'Welcome to Fingerprint MIS - Your Login Details',
-      text: `Hello,
+    // Only send email for specific collections
+    if (!['instructors', 'security', 'invigilators'].includes(collectionId)) {
+      console.log('Document created in collection', collectionId, '- no email sent.');
+      return null;
+    }
+
+    const defaultPassword = userData.defaultPassword ? 'DefaultPass123!' : null;
+
+    let emailText = `Hello,
 
 Your account has been successfully created.
 
 Login details:
 Email: ${email}
-Password: ${password}
+`;
 
-Please keep this information secure.
+    if (defaultPassword) {
+      emailText += `
+Your temporary password is: ${defaultPassword}
+
+Please change your password within 24 hours after your first login.
+`;
+    } else {
+      emailText += `
+Please use the password you set during registration to log in.
+`;
+    }
+
+    emailText += `
+If you forgot your password, please use the password reset option.
 
 Thank you,
-Fingerprint MIS Team`,
+Fingerprint MIS Team`;
+
+    const mailOptions = {
+      from: 'Fingerprint Attendance <eg8217178@gmail.com>',
+      to: email,
+      subject: 'Welcome to Fingerprint MIS - Your Login Details',
+      text: emailText,
     };
 
     try {

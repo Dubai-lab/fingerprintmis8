@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:fingerprintmis8/admin_registration_page.dart';
 import 'package:fingerprintmis8/join_students_page.dart';
+import 'package:fingerprintmis8/manage_courses_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -209,6 +210,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       );
                     },
                   ),
+                   ListTile(
+              leading: Icon(Icons.book),
+              title: Text('Manage Courses'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ManageCoursesPage()),
+                );
+              },
+            ),
                 ],
               ),
             ),

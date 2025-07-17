@@ -14,11 +14,29 @@ class InstructorDashboardPage extends StatefulWidget {
 
 class _InstructorDashboardPageState extends State<InstructorDashboardPage> {
   int _dailyAttendanceCount = 0;
+  bool _showChangePasswordPrompt = false;
 
   @override
   void initState() {
     super.initState();
     _fetchDailyAttendanceCount();
+    _checkDefaultPassword();
+  }
+
+  void _checkDefaultPassword() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (userId.isEmpty) return;
+
+    final userDoc = await FirebaseFirestore.instance.collection('instructors').doc(userId).get();
+    if (userDoc.exists) {
+      bool defaultPassword = userDoc.get('defaultPassword') ?? false;
+      String role = userDoc.get('role') ?? '';
+      if (defaultPassword && role != 'admin') {
+        setState(() {
+          _showChangePasswordPrompt = true;
+        });
+      }
+    }
   }
 
   void _fetchDailyAttendanceCount() async {
@@ -149,6 +167,24 @@ class _InstructorDashboardPageState extends State<InstructorDashboardPage> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
+            if (_showChangePasswordPrompt)
+              Card(
+                color: Colors.amber.shade100,
+                margin: EdgeInsets.only(bottom: 20),
+                child: ListTile(
+                  leading: Icon(Icons.warning, color: Colors.amber.shade800),
+                  title: Text(
+                    'You are using a default password. Please change it.',
+                    style: TextStyle(color: Colors.amber.shade800, fontWeight: FontWeight.bold),
+                  ),
+                  trailing: ElevatedButton(
+                    child: Text('Change Password'),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/change-password');
+                    },
+                  ),
+                ),
+              ),
             Card(
               elevation: 6,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
