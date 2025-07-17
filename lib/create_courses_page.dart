@@ -52,8 +52,16 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
     if (courseName.isEmpty || _selectedInstructorId == null || _startDate == null || _endDate == null) return;
 
     try {
+      // Find instructor name from _instructors list
+      final instructor = _instructors.firstWhere(
+        (inst) => inst['id'] == _selectedInstructorId,
+        orElse: () => {'name': 'Unknown'},
+      );
+      final instructorName = instructor['name'] ?? 'Unknown';
+
       await _firestore.collection('instructor_courses').add({
         'instructorId': _selectedInstructorId,
+        'instructorName': instructorName,
         'courseName': courseName,
         'session': _selectedSession,
         'startDate': _startDate,

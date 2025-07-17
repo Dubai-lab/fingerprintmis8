@@ -119,6 +119,14 @@ class _InstructorDashboardPageState extends State<InstructorDashboardPage> {
                 padding: EdgeInsets.zero,
                 children: [
                   ListTile(
+                    leading: Icon(Icons.dashboard, color: Colors.deepPurple),
+                    title: Text('Dashboard', style: TextStyle(fontSize: 18)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushReplacementNamed(context, '/instructor_dashboard');
+                    },
+                  ),
+                  ListTile(
                     leading: Icon(Icons.check_circle, color: Colors.deepPurple),
                     title: Text('Attendance', style: TextStyle(fontSize: 18)),
                     onTap: () {
@@ -153,6 +161,14 @@ class _InstructorDashboardPageState extends State<InstructorDashboardPage> {
                   ),
                 ],
               ),
+            ),
+            ListTile(
+              leading: Icon(Icons.history, color: Colors.deepPurple),
+              title: Text('Course History', style: TextStyle(fontSize: 18)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/history');
+              },
             ),
             Divider(height: 1),
             ListTile(

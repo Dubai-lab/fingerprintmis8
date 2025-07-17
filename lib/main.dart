@@ -21,6 +21,7 @@ import 'user_management_page.dart';
 import 'security_registration_page.dart';
 import 'security_dashboard_page.dart';
 import 'manage_courses_page.dart';
+import 'history_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Fingerprint MIS',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -63,6 +65,7 @@ class MyApp extends StatelessWidget {
         '/security_registration': (context) => const SecurityRegistrationPage(),
         '/security_dashboard': (context) => const SecurityDashboardPage(),
         '/manage_courses': (context) => ManageCoursesPage(),
+        '/history': (context) => const HistoryPage(),
       },
     );
   }

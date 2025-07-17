@@ -91,10 +91,19 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       ),
                     ),
                   ),
+                  ListTile(
+                    leading: Icon(Icons.dashboard, color: Colors.deepPurple),
+                    title: Text('Dashboard', style: TextStyle(fontSize: 18)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushReplacementNamed(context, '/admin_dashboard');
+                    },
+                  ),
+                   Divider(),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Text(
-                      'Registrations',
+                      'Registeration',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

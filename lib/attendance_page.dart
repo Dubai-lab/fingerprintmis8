@@ -80,9 +80,11 @@ class _AttendancePageState extends State<AttendancePage> {
     });
 
     try {
+      final now = DateTime.now();
       final querySnapshot = await FirebaseFirestore.instance
           .collection('instructor_courses')
           .where('instructorId', isEqualTo: userId)
+          .where('endDate', isGreaterThan: now)
           .get();
 
       setState(() {
@@ -320,6 +322,7 @@ class _AttendancePageState extends State<AttendancePage> {
           'timestamp': FieldValue.serverTimestamp(),
           'status': 'Present',
           'courseId': _selectedCourseId,
+          'courseName': _selectedCourseName,
           'sessionId': widget.sessionId,
         });
 

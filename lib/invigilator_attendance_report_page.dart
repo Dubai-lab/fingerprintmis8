@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:csv/csv.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class InvigilatorAttendanceReportPage extends StatefulWidget {
   const InvigilatorAttendanceReportPage({Key? key}) : super(key: key);
@@ -74,12 +77,21 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
       setState(() {
         _attendanceRecords = querySnapshot.docs.map((doc) {
           final data = doc.data();
+          String courseId = data['courseId'] ?? '';
+          String courseName = '';
+          for (var course in _courses) {
+            if (course['id'] == courseId) {
+              courseName = course['name'];
+              break;
+            }
+          }
           return {
             'regNumber': data['regNumber'] ?? '',
             'timestamp': data['timestamp']?.toDate(),
             'status': data['status'] ?? '',
             'activity': data['activity'] ?? '',
-            'courseId': data['courseId'] ?? '',
+            'courseId': courseId,
+            'courseName': courseName ?? '',
           };
         }).toList();
         _loading = false;
@@ -92,25 +104,70 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
     }
   }
 
-  Widget _buildAttendanceList() {
+  Future<void> _exportCSV() async {
+    if (_attendanceRecords.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No attendance records to export')),
+      );
+      return;
+    }
+
+      List<List<String>> csvData = [
+      ['RegNumber', 'Timestamp', 'Status', 'Activity', 'CourseName'],
+      ..._attendanceRecords.map((record) => [
+            record['regNumber'],
+            record['timestamp'] != null ? record['timestamp'].toString() : '',
+            record['status'],
+            record['activity'],
+            record['courseName'],
+          ]),
+    ];
+
+    String csv = const ListToCsvConverter().convert(csvData);
+
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/attendance_report.csv';
+    final file = File(path);
+
+    await file.writeAsString(csv);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('CSV exported to $path')),
+    );
+  }
+
+  Widget _buildAttendanceTable() {
     if (_loading) {
       return Center(child: CircularProgressIndicator());
     }
     if (_attendanceRecords.isEmpty) {
       return Center(child: Text('No attendance records found.'));
     }
-    return ListView.builder(
-      itemCount: _attendanceRecords.length,
-      itemBuilder: (context, index) {
-        final record = _attendanceRecords[index];
-        final timestamp = record['timestamp'] as DateTime?;
-        final formattedDate = timestamp != null ? '${timestamp.year}-${timestamp.month.toString().padLeft(2,'0')}-${timestamp.day.toString().padLeft(2,'0')} ${timestamp.hour.toString().padLeft(2,'0')}:${timestamp.minute.toString().padLeft(2,'0')}' : 'Unknown';
-        return ListTile(
-          leading: Icon(Icons.person),
-          title: Text('Reg#: ${record['regNumber']}'),
-          subtitle: Text('Status: ${record['status']} - Date: $formattedDate'),
-        );
-      },
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columns: const [
+          DataColumn(label: Text('RegNumber')),
+          DataColumn(label: Text('Timestamp')),
+          DataColumn(label: Text('Status')),
+          DataColumn(label: Text('Activity')),
+          DataColumn(label: Text('CourseName')),
+        ],
+        rows: _attendanceRecords.map((record) {
+          final timestamp = record['timestamp'] as DateTime?;
+          final formattedDate = timestamp != null
+              ? '${timestamp.year}-${timestamp.month.toString().padLeft(2, '0')}-${timestamp.day.toString().padLeft(2, '0')} ${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}'
+              : 'Unknown';
+          return DataRow(cells: [
+            DataCell(Text(record['regNumber'])),
+            DataCell(Text(formattedDate)),
+            DataCell(Text(record['status'])),
+            DataCell(Text(record['activity'])),
+            DataCell(Text(record['courseName'] ?? 'Unknown Course')),
+          ]);
+        }).toList(),
+      ),
     );
   }
 
@@ -120,6 +177,13 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
       appBar: AppBar(
         title: Text('Invigilator Attendance Report'),
         backgroundColor: Colors.deepPurple,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.download),
+            tooltip: 'Download CSV',
+            onPressed: _exportCSV,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -173,7 +237,7 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
                 },
               ),
             SizedBox(height: 16),
-            Expanded(child: _buildAttendanceList()),
+            Expanded(child: _buildAttendanceTable()),
             if (_status.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),

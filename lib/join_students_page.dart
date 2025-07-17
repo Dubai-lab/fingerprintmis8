@@ -13,14 +13,30 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
 
   String? _selectedCourseId;
   List<String> _selectedStudentIds = [];
+  String _searchRegNumber = '';
+
+  Future<List<String>> _getJoinedStudentIds() async {
+    if (_selectedCourseId == null) return [];
+    final snapshot = await _firestore.collection('instructor_courses').doc(_selectedCourseId).collection('students').get();
+    return snapshot.docs.map((doc) => doc.id).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Join Students to Course'),
+        backgroundColor: Colors.deepPurple,
+        elevation: 0,
       ),
-      body: Padding(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade200, Colors.deepPurple.shade600],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -28,12 +44,16 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
             StreamBuilder<QuerySnapshot>(
               stream: _firestore.collection('instructor_courses').orderBy('createdAt', descending: true).snapshots(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) return CircularProgressIndicator();
+                if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
                 final courses = snapshot.data!.docs;
                 return DropdownButtonFormField<String>(
                   decoration: InputDecoration(
                     labelText: 'Select Course',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
                   ),
                   value: _selectedCourseId,
                   items: courses.map((course) {
@@ -45,45 +65,95 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
                   onChanged: (value) {
                     setState(() {
                       _selectedCourseId = value;
+                      _selectedStudentIds.clear();
                     });
                   },
                 );
               },
             ),
             SizedBox(height: 16),
+            // Search field
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Search by Registration Number',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchRegNumber = value.trim();
+                });
+              },
+            ),
+            SizedBox(height: 16),
             // Students list
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: _firestore.collection('students').orderBy('name').snapshots(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) return CircularProgressIndicator();
-                  final students = snapshot.data!.docs;
-                  return ListView(
-                    children: students.map((student) {
-                      final studentId = student.id;
-                      final studentName = student['name'] ?? 'Unnamed Student';
-                      final isSelected = _selectedStudentIds.contains(studentId);
-                      return CheckboxListTile(
-                        title: Text(studentName),
-                        value: isSelected,
-                        onChanged: (checked) {
-                          setState(() {
-                            if (checked == true) {
-                              _selectedStudentIds.add(studentId);
-                            } else {
-                              _selectedStudentIds.remove(studentId);
-                            }
-                          });
-                        },
+              child: FutureBuilder<List<String>>(
+                future: _getJoinedStudentIds(),
+                builder: (context, joinedSnapshot) {
+                  if (!joinedSnapshot.hasData) return Center(child: CircularProgressIndicator());
+                  final joinedStudentIds = joinedSnapshot.data!;
+                  return StreamBuilder<QuerySnapshot>(
+                    stream: _firestore.collection('students')
+                        .orderBy('name')
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
+                      final students = snapshot.data!.docs.where((student) {
+                        final studentId = student.id;
+                        final regNumber = student['regNumber'] ?? '';
+                        final matchesSearch = _searchRegNumber.isEmpty || regNumber.contains(_searchRegNumber);
+                        final notJoined = !joinedStudentIds.contains(studentId);
+                        return matchesSearch && notJoined;
+                      }).toList();
+                      return ListView(
+                        children: students.map((student) {
+                          final studentId = student.id;
+                          final studentName = student['name'] ?? 'Unnamed Student';
+                          final isSelected = _selectedStudentIds.contains(studentId);
+                          return Card(
+                            elevation: 4,
+                            margin: EdgeInsets.symmetric(vertical: 6),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: CheckboxListTile(
+                              title: Text(
+                                '$studentName (${student['regNumber'] ?? ''})',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              value: isSelected,
+                              onChanged: (checked) {
+                                setState(() {
+                                  if (checked == true) {
+                                    _selectedStudentIds.add(studentId);
+                                  } else {
+                                    _selectedStudentIds.remove(studentId);
+                                  }
+                                });
+                              },
+                            ),
+                          );
+                        }).toList(),
                       );
-                    }).toList(),
+                    },
                   );
                 },
               ),
             ),
+            SizedBox(height: 16),
             ElevatedButton(
               onPressed: _selectedCourseId != null && _selectedStudentIds.isNotEmpty ? _joinStudents : null,
-              child: Text('Join Students to Course'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                minimumSize: Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('Join Students to Course', style: TextStyle(fontSize: 18, color: Colors.white)),
             ),
           ],
         ),

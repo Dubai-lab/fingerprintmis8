@@ -67,8 +67,10 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
 
   Future<void> _loadCourses() async {
     try {
+      final now = DateTime.now();
       final querySnapshot = await FirebaseFirestore.instance
           .collection('instructor_courses')
+          .where('endDate', isGreaterThan: now)
           .get();
 
       setState(() {

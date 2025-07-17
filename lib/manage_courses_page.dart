@@ -78,7 +78,7 @@ class _ManageCoursesPageState extends State<ManageCoursesPage> {
             children: [
               Text('Course Name: ${course['courseName'] ?? ''}'),
               Text('Session: ${course['session'] ?? ''}'),
-              Text('Instructor ID: ${course['instructorId'] ?? ''}'),
+              Text('Instructor: ${course['instructorName'] ?? course['instructorId'] ?? ''}'),
               Text('Start Date: ${startDate != null ? startDate.toLocal().toString().split(" ")[0] : 'N/A'}'),
               Text('End Date: ${endDate != null ? endDate.toLocal().toString().split(" ")[0] : 'N/A'}'),
             ],
