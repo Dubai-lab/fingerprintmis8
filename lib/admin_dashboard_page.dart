@@ -11,6 +11,7 @@ import 'invigilator_registration_page.dart';
 import 'package:fingerprintmis8/create_courses_page.dart';
 import 'package:fingerprintmis8/student_verification_page.dart';
 import 'package:fingerprintmis8/security_registration_page.dart';
+import 'admin_dashboard_chart.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({Key? key}) : super(key: key);
@@ -25,11 +26,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int studentCount = 0;
   int instructorCount = 0;
   int invigilatorCount = 0;
+  int securityCount = 0;
   bool loading = true;
 
   StreamSubscription? _studentsSubscription;
   StreamSubscription? _instructorsSubscription;
   StreamSubscription? _invigilatorsSubscription;
+  StreamSubscription? _securitySubscription;
 
   @override
   void initState() {
@@ -56,6 +59,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         loading = false;
       });
     });
+
+    _securitySubscription = FirebaseFirestore.instance.collection('security').snapshots().listen((snapshot) {
+      print('Security snapshot received with ${snapshot.size} documents');
+      for (var doc in snapshot.docs) {
+        print('Security doc id: ${doc.id}, data: ${doc.data()}');
+      }
+      setState(() {
+        securityCount = snapshot.size;
+        print('Security count updated: $securityCount');
+      });
+    });
   }
 
   @override
@@ -63,6 +77,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _studentsSubscription?.cancel();
     _instructorsSubscription?.cancel();
     _invigilatorsSubscription?.cancel();
+    _securitySubscription?.cancel();
     super.dispose();
   }
 
@@ -174,7 +189,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple,
+                        color: const Color.fromARGB(255, 142, 22, 179),
                       ),
                     ),
                   ),
@@ -210,7 +225,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                   ListTile(
                     leading: Icon(Icons.group_add),
-                    title: Text('Join Students to Course'),
+                    title: Text('Join Students'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
@@ -247,108 +262,143 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         ),
       ),
       bottomNavigationBar: null,
-      body: Center(
-        child: loading
-            ? CircularProgressIndicator()
-            : Column(
+      body: loading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: 20),
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 16),
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.deepPurple.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildCountBox('Students', studentCount, Colors.blue),
-                        _buildCountBox('Instructors', instructorCount, Colors.green),
-                        _buildCountBox('Invigilators', invigilatorCount, Colors.orange),
-                      ],
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Expanded(child: _buildCountBox('Students', studentCount, Colors.blue)),
+                      SizedBox(width: 8),
+                      Expanded(child: _buildCountBox('Instructors', instructorCount, Colors.green)),
+                      SizedBox(width: 8),
+                      Expanded(child: _buildCountBox('Invigilators', invigilatorCount, Colors.orange)),
+                      SizedBox(width: 8),
+                      Expanded(child: _buildCountBox('Security', securityCount, Colors.red)),
+                    ],
                   ),
-                  SizedBox(height: 40),
-                  Text('Welcome to the Admin Dashboard', style: TextStyle(fontSize: 20)),
+                  
                   SizedBox(height: 20),
+                  Text(
+                    'Quick Actions',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 0, 0, 0)),
+                  ),
+                  SizedBox(height: 10),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: [
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.person_add),
+                        label: Text('Register Student'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => StudentRegistrationPage()),
+                          );
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.person_add_alt_1),
+                        label: Text('Register Instructor'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => InstructorRegistrationPage()),
+                          );
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.book),
+                        label: Text('Create Course'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => CreateCoursesPage()),
+                          );
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.verified_user),
+                        label: Text('Student Verification'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => StudentVerificationPage()),
+                          );
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.book),
+                        label: Text('Manage Courses'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ManageCoursesPage()),
+                          );
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.group),
+                        label: Text('User Management'),
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/user_management');
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.security),
+                        label: Text('Security Registration'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => SecurityRegistrationPage()),
+                          );
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.group_add),
+                        label: Text('Join Students'),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => JoinStudentsPage()),
+                          );
+                        },
+                      ),
+                      Divider(),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Quick Actions',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
-                        ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Text(
+                      'Chart Grapgh',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: const Color.fromARGB(255, 0, 0, 0),
                       ),
                     ),
                   ),
-                  SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        ElevatedButton.icon(
-                          icon: Icon(Icons.person_add),
-                          label: Text('Register Student'),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => StudentRegistrationPage()),
-                            );
-                          },
-                        ),
-                        ElevatedButton.icon(
-                          icon: Icon(Icons.person_add_alt_1),
-                          label: Text('Register Instructor'),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => InstructorRegistrationPage()),
-                            );
-                          },
-                        ),
-                        ElevatedButton.icon(
-                          icon: Icon(Icons.book),
-                          label: Text('Create Course'),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => CreateCoursesPage()),
-                            );
-                          },
-                        ),
-                        ElevatedButton.icon(
-                          icon: Icon(Icons.group),
-                          label: Text('User Management'),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/user_management');
-                          },
-                        ),
-                      ],
-                    ),
+                  SizedBox(height: 20),
+                  AdminDashboardChart(
+                    studentCount: studentCount,
+                    instructorCount: instructorCount,
+                    invigilatorCount: invigilatorCount,
+                    securityCount: securityCount,
+                  ),
+                    ],
                   ),
                 ],
               ),
-      ),
+            ),
     );
   }
 
   Widget _buildCountBox(String label, int count, Color color) {
     return Container(
-      width: 100,
+      // width: 100,  // Removed fixed width to allow Expanded to control size
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.2),

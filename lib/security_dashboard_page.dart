@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'student_verification_page.dart';
+import 'security_verification_page.dart';
 import 'security_registration_page.dart';
 
 class SecurityDashboardPage extends StatefulWidget {
@@ -41,6 +41,7 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
       appBar: AppBar(
         title: Text('Security Dashboard'),
         backgroundColor: Colors.deepPurple,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -71,7 +72,19 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
                 ),
               ),
             ),
-          Expanded(child: StudentVerificationPage()),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton.icon(
+              icon: Icon(Icons.verified_user),
+              label: Text('Go to Security Verification'),
+              onPressed: () {
+                Navigator.pushNamed(context, '/security_verification');
+              },
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(double.infinity, 50),
+              ),
+            ),
+          ),
         ],
       ),
     );

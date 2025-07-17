@@ -20,6 +20,7 @@ import 'attendance_view_page.dart';
 import 'user_management_page.dart';
 import 'security_registration_page.dart';
 import 'security_dashboard_page.dart';
+import 'security_verification_page.dart';
 import 'manage_courses_page.dart';
 import 'history_page.dart';
 
@@ -64,6 +65,7 @@ class MyApp extends StatelessWidget {
         '/user_management': (context) => const UserManagementPage(),
         '/security_registration': (context) => const SecurityRegistrationPage(),
         '/security_dashboard': (context) => const SecurityDashboardPage(),
+        '/security_verification': (context) => SecurityVerificationPage(),
         '/manage_courses': (context) => ManageCoursesPage(),
         '/history': (context) => const HistoryPage(),
       },

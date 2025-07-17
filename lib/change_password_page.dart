@@ -46,16 +46,25 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       await user.reload();
 
       // Update Firestore to clear defaultPassword flag
-      await FirebaseFirestore.instance.collection('instructors').doc(user.uid).update({
-        'defaultPassword': false,
-        'passwordSetTime': null,
-      }).catchError((_) async {
-        // Try other collections if not found in instructors
-        await FirebaseFirestore.instance.collection('invigilators').doc(user.uid).update({
+      // Try updating in instructors, invigilators, and security collections
+      try {
+        await FirebaseFirestore.instance.collection('instructors').doc(user.uid).update({
           'defaultPassword': false,
           'passwordSetTime': null,
         });
-      });
+      } catch (_) {
+        try {
+          await FirebaseFirestore.instance.collection('invigilators').doc(user.uid).update({
+            'defaultPassword': false,
+            'passwordSetTime': null,
+          });
+        } catch (_) {
+          await FirebaseFirestore.instance.collection('security').doc(user.uid).update({
+            'defaultPassword': false,
+            'passwordSetTime': null,
+          });
+        }
+      }
 
       setState(() {
         _status = 'Password changed successfully';

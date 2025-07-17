@@ -39,6 +39,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
           'id': doc.id,
           'name': data['name'] ?? '',
           'regNumber': data['regNumber'] ?? '',
+          'department': data['department'] ?? '',
           'type': UserType.students,
         };
       }));
@@ -98,7 +99,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
       filtered = filtered.where((user) {
         final name = (user['name'] ?? '').toLowerCase();
         final regNumber = (user['regNumber'] ?? '').toLowerCase();
-        return name.contains(query) || regNumber.contains(query);
+        final department = (user['department'] ?? '').toLowerCase();
+        return name.contains(query) || regNumber.contains(query) || department.contains(query);
       }).toList();
     }
 
@@ -118,16 +120,179 @@ class _UserManagementPageState extends State<UserManagementPage> {
       itemCount: _displayedUsers.length,
       itemBuilder: (context, index) {
         final user = _displayedUsers[index];
-        return ListTile(
+      return ListTile(
           title: Text(user['name'] ?? ''),
           subtitle: user['regNumber'] != null && user['regNumber'].isNotEmpty ? Text('Reg#: ${user['regNumber']}') : null,
           leading: Icon(Icons.person),
+          trailing: PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'view') {
+                _viewUserDetails(user);
+              } else if (value == 'edit') {
+                _editUser(user);
+              } else if (value == 'delete') {
+                _deleteUser(user);
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'view', child: Text('View Details')),
+              PopupMenuItem(value: 'edit', child: Text('Edit')),
+              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            ],
+          ),
           onTap: () {
             // Optionally handle user tap
           },
         );
       },
     );
+  }
+
+  Future<void> _viewUserDetails(Map<String, dynamic> user) async {
+    print('Viewing user details: $user'); // Debug print
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('User Details'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+              Text('Name: ${user['name'] ?? ''}'),
+              if (user['regNumber'] != null && user['regNumber'].isNotEmpty)
+                Text('Registration Number: ${user['regNumber']}'),
+              if (user['department'] != null && user['department'].isNotEmpty)
+                Text('Department: ${user['department']}'),
+              if (user['email'] != null && user['email'].isNotEmpty)
+                Text('Email: ${user['email']}'),
+              Text('User Type: ${user['type'].toString().split('.').last}'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _editUser(Map<String, dynamic> user) async {
+    final _formKey = GlobalKey<FormState>();
+    final TextEditingController _nameController = TextEditingController(text: user['name'] ?? '');
+    final TextEditingController _regNumberController = TextEditingController(text: user['regNumber'] ?? '');
+    final TextEditingController _departmentController = TextEditingController(text: user['department'] ?? '');
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit User'),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: 'Name'),
+                  validator: (value) => value == null || value.isEmpty ? 'Enter name' : null,
+                ),
+                if (user['regNumber'] != null)
+                  TextFormField(
+                    controller: _regNumberController,
+                    decoration: InputDecoration(labelText: 'Registration Number'),
+                    validator: (value) => value == null || value.isEmpty ? 'Enter registration number' : null,
+                  ),
+                if (user['department'] != null)
+                  TextFormField(
+                    controller: _departmentController,
+                    decoration: InputDecoration(labelText: 'Department'),
+                    validator: (value) => value == null || value.isEmpty ? 'Enter department' : null,
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (_formKey.currentState != null && _formKey.currentState!.validate()) {
+                  try {
+                    String collectionName = _getCollectionName(user['type']);
+                    await FirebaseFirestore.instance.collection(collectionName).doc(user['id']).update({
+                      'name': _nameController.text.trim(),
+                      if (user['regNumber'] != null) 'regNumber': _regNumberController.text.trim(),
+                      if (user['department'] != null) 'department': _departmentController.text.trim(),
+                    });
+                    Navigator.pop(context);
+                    _fetchAllUsers();
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update user: $e')));
+                  }
+                }
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteUser(Map<String, dynamic> user) async {
+    bool confirmed = false;
+    confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('Delete User'),
+              content: Text('Are you sure you want to delete ${user['name']}?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text('Delete'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (confirmed) {
+      try {
+        String collectionName = _getCollectionName(user['type']);
+        await FirebaseFirestore.instance.collection(collectionName).doc(user['id']).delete();
+        _fetchAllUsers();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete user: $e')));
+      }
+    }
+  }
+
+  String _getCollectionName(UserType type) {
+    switch (type) {
+      case UserType.students:
+        return 'students';
+      case UserType.instructors:
+        return 'instructors';
+      case UserType.invigilators:
+        return 'invigilators';
+      case UserType.admins:
+        return 'admins';
+      default:
+        return '';
+    }
   }
 
   @override

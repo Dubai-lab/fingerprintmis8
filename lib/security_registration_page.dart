@@ -46,8 +46,9 @@ class _SecurityRegistrationPageState extends State<SecurityRegistrationPage> {
         );
 
         // Show success message only, do not navigate automatically
+        // Removed any login or navigation after registration
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration successful. Please login.')),
+          SnackBar(content: Text('Registration successful')),
         );
       } on FirebaseAuthException catch (e) {
         String message = 'Registration failed';

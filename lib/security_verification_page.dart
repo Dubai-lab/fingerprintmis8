@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'fingerprint_sdk.dart';
 
-class StudentVerificationPage extends StatefulWidget {
+class SecurityVerificationPage extends StatefulWidget {
   @override
-  _StudentVerificationPageState createState() => _StudentVerificationPageState();
+  _SecurityVerificationPageState createState() => _SecurityVerificationPageState();
 }
 
-class _StudentVerificationPageState extends State<StudentVerificationPage> {
+class _SecurityVerificationPageState extends State<SecurityVerificationPage> {
   final FingerprintSdk _fingerprintSdk = FingerprintSdk();
 
   String _status = 'Idle';
@@ -164,7 +164,7 @@ class _StudentVerificationPageState extends State<StudentVerificationPage> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Student Verification'),
+        title: Text('Security Verification'),
         backgroundColor: Colors.deepPurple,
         centerTitle: true,
         elevation: 4,
@@ -225,16 +225,16 @@ class _StudentVerificationPageState extends State<StudentVerificationPage> {
               ],
             ),
             SizedBox(height: 40),
-            ElevatedButton.icon(
-              icon: Icon(Icons.fingerprint),
-              label: Text('Scan Fingerprint', style: TextStyle(color: Colors.white)),
-              onPressed: (_deviceOpened && !_scanning) ? _startScanning : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                textStyle: TextStyle(fontSize: 16),
-              ),
-            ),
+                ElevatedButton.icon(
+                  icon: Icon(Icons.fingerprint),
+                  label: Text('Scan Fingerprint', style: TextStyle(color: Colors.white)),
+                  onPressed: (_deviceOpened && !_scanning) ? _startScanning : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    textStyle: TextStyle(fontSize: 16),
+                  ),
+                ),
             SizedBox(height: 40),
             _matchedStudent != null
                 ? Card(
@@ -266,7 +266,7 @@ class _StudentVerificationPageState extends State<StudentVerificationPage> {
                   )
                 : Text(
                     'No student matched',
-                    style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic, color: const Color.fromARGB(255, 0, 0, 0)),
+                    style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic, color: const Color.fromARGB(255, 8, 8, 8)),
                   ),
           ],
         ),
