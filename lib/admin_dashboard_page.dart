@@ -288,92 +288,147 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 0, 0, 0)),
                   ),
                   SizedBox(height: 10),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      ElevatedButton.icon(
-                        icon: Icon(Icons.person_add),
-                        label: Text('Register Student'),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => StudentRegistrationPage()),
-                          );
-                        },
-                      ),
-                      ElevatedButton.icon(
-                        icon: Icon(Icons.person_add_alt_1),
-                        label: Text('Register Instructor'),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => InstructorRegistrationPage()),
-                          );
-                        },
-                      ),
-                      ElevatedButton.icon(
-                        icon: Icon(Icons.book),
-                        label: Text('Create Course'),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => CreateCoursesPage()),
-                          );
-                        },
-                      ),
-                      ElevatedButton.icon(
-                        icon: Icon(Icons.verified_user),
-                        label: Text('Student Verification'),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => StudentVerificationPage()),
-                          );
-                        },
-                      ),
-                      ElevatedButton.icon(
-                        icon: Icon(Icons.book),
-                        label: Text('Manage Courses'),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ManageCoursesPage()),
-                          );
-                        },
-                      ),
-                      ElevatedButton.icon(
-                        icon: Icon(Icons.group),
-                        label: Text('User Management'),
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/user_management');
-                        },
-                      ),
-                      ElevatedButton.icon(
-                        icon: Icon(Icons.security),
-                        label: Text('Security Registration'),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => SecurityRegistrationPage()),
-                          );
-                        },
-                      ),
-                      ElevatedButton.icon(
-                        icon: Icon(Icons.group_add),
-                        label: Text('Join Students'),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => JoinStudentsPage()),
-                          );
-                        },
-                      ),
-                      Divider(),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      double buttonWidth = (constraints.maxWidth - 12) / 2;
+                      return Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          SizedBox(
+                            width: buttonWidth,
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.person_add),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('Register Student'),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => StudentRegistrationPage()),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: buttonWidth,
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.person_add_alt_1),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('Register Instructor'),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => InstructorRegistrationPage()),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: buttonWidth,
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.book),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('Create Course'),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => CreateCoursesPage()),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: buttonWidth,
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.verified_user),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('Student Verification'),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => StudentVerificationPage()),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: buttonWidth,
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.book),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('Manage Courses'),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => ManageCoursesPage()),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: buttonWidth,
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.group),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('User Management'),
+                              ),
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/user_management');
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: buttonWidth,
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.security),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('Security Registration'),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => SecurityRegistrationPage()),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: buttonWidth,
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.group_add),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('Join Students'),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => JoinStudentsPage()),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  Divider(),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Text(
-                      'Chart Grapgh',
+                      'Chart Graph',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -387,8 +442,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     instructorCount: instructorCount,
                     invigilatorCount: invigilatorCount,
                     securityCount: securityCount,
-                  ),
-                    ],
                   ),
                 ],
               ),

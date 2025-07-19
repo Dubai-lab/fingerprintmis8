@@ -93,7 +93,13 @@ class _InvigilatorRegistrationPageState extends State<InvigilatorRegistrationPag
                         ),
                       ),
                       SizedBox(height: 20),
-                      Text('Status: $_status', style: TextStyle(color: Colors.redAccent)),
+                      Text(
+                        'Status: $_status',
+                        style: TextStyle(
+                          color: _status.toLowerCase().contains('success') ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       SizedBox(height: 10),
                       TextFormField(
                         controller: _nameController,

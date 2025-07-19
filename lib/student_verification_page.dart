@@ -178,97 +178,99 @@ class _StudentVerificationPageState extends State<StudentVerificationPage> {
           ),
         ),
         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Icon(
-              Icons.fingerprint,
-              size: 140,
-              color: _deviceOpened ? Colors.green : Colors.red,
-            ),
-            SizedBox(height: 24),
-            Text(
-              'Status:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-            ),
-            SizedBox(height: 8),
-            Text(
-              _status,
-              style: TextStyle(fontSize: 18, color: Colors.black87),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  icon: Icon(Icons.usb),
-                  label: Text('Open Device', style: TextStyle(color: Colors.white)),
-                  onPressed: _deviceOpened ? null : _openDevice,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    textStyle: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
-                ),
-                SizedBox(width: 16),
-                ElevatedButton.icon(
-                  icon: Icon(Icons.usb_off, color: Colors.white),
-                  label: Text('Close Device', style: TextStyle(color: Colors.white)),
-                  onPressed: !_deviceOpened ? null : _closeDevice,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    textStyle: TextStyle(fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 40),
-            ElevatedButton.icon(
-              icon: Icon(Icons.fingerprint),
-              label: Text('Scan Fingerprint', style: TextStyle(color: Colors.white)),
-              onPressed: (_deviceOpened && !_scanning) ? _startScanning : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                textStyle: TextStyle(fontSize: 16),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.fingerprint,
+                size: 140,
+                color: _deviceOpened ? Colors.green : Colors.red,
               ),
-            ),
-            SizedBox(height: 40),
-            _matchedStudent != null
-                ? Card(
-                    elevation: 6,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    color: theme.colorScheme.primary.withOpacity(0.15),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Name: ${_matchedStudent?['name'] ?? ''}',
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Registration Number: ${_matchedStudent?['regNumber'] ?? ''}',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Department: ${_matchedStudent?['department'] ?? 'N/A'}',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ],
+              SizedBox(height: 24),
+              Text(
+                'Status:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+              ),
+              SizedBox(height: 8),
+              Text(
+                _status,
+                style: TextStyle(fontSize: 18, color: Colors.black87),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+              ElevatedButton.icon(
+                icon: Icon(Icons.usb, color: Colors.white),
+                label: Text('Open Device', style: TextStyle(color: Colors.white)),
+                onPressed: _deviceOpened ? null : _openDevice,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  textStyle: TextStyle(fontSize: 16),
+                ),
+              ),
+              SizedBox(width: 16),
+              ElevatedButton.icon(
+                icon: Icon(Icons.usb_off, color: Colors.white),
+                label: Text('Close Device', style: TextStyle(color: Colors.white)),
+                onPressed: !_deviceOpened ? null : _closeDevice,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  textStyle: TextStyle(fontSize: 16),
+                ),
+              ),
+                ],
+              ),
+              SizedBox(height: 40),
+              ElevatedButton.icon(
+                icon: Icon(Icons.fingerprint),
+                label: Text('Scan Fingerprint', style: TextStyle(color: Colors.white)),
+                onPressed: (_deviceOpened && !_scanning) ? _startScanning : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  textStyle: TextStyle(fontSize: 16),
+                ),
+              ),
+              SizedBox(height: 40),
+              _matchedStudent != null
+                  ? Card(
+                      elevation: 6,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      color: theme.colorScheme.primary.withOpacity(0.15),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Name: ${_matchedStudent?['name'] ?? ''}',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Registration Number: ${_matchedStudent?['regNumber'] ?? ''}',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Department: ${_matchedStudent?['department'] ?? 'N/A'}',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          ],
+                        ),
                       ),
+                    )
+                  : Text(
+                      'No student matched',
+                      style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic, color: const Color.fromARGB(255, 0, 0, 0)),
                     ),
-                  )
-                : Text(
-                    'No student matched',
-                    style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic, color: const Color.fromARGB(255, 0, 0, 0)),
-                  ),
-          ],
+            ],
+          ),
         ),
       ),
     );

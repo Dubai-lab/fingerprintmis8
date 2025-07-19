@@ -459,105 +459,116 @@ class _AttendancePageState extends State<AttendancePage> {
           },
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            _loadingCourses
-                ? LinearProgressIndicator()
-                : DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: 'Select Course',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _loadingCourses
+                        ? LinearProgressIndicator()
+                        : DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                              labelText: 'Select Course',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            ),
+                            value: _selectedCourseId,
+                            items: _courses.map((course) {
+                              return DropdownMenuItem<String>(
+                                value: course['id'],
+                                child: Text(course['name']),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedCourseId = value;
+                              });
+                              _loadTodayAttendance();
+                            },
+                          ),
+                    SizedBox(height: 30),
+                    Card(
+                      elevation: 6,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      child: ListTile(
+                        leading: Icon(Icons.fingerprint, color: Colors.deepPurple, size: 40),
+                        title: Text(
+                          'Fingerprint Scanner Status',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Container(
+                          height: 100,
+                          child: SingleChildScrollView(
+                            child: Text(
+                              _status,
+                              style: TextStyle(fontSize: 18, color: Colors.black87),
+                            ),
+                          ),
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(Icons.refresh, color: Colors.deepPurple),
+                          onPressed: () {
+                            if (!_scanning) {
+                              _startScanning();
+                            }
+                          },
+                        ),
+                      ),
                     ),
-                    value: _selectedCourseId,
-                    items: _courses.map((course) {
-                      return DropdownMenuItem<String>(
-                        value: course['id'],
-                        child: Text(course['name']),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCourseId = value;
-                      });
-                      _loadTodayAttendance();
-                    },
-                  ),
-            SizedBox(height: 30),
-            Card(
-              elevation: 6,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-              child: ListTile(
-                leading: Icon(Icons.fingerprint, color: Colors.deepPurple, size: 40),
-                title: Text(
-                  'Fingerprint Scanner Status',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                subtitle: Container(
-                  height: 100,
-                  child: SingleChildScrollView(
-                    child: Text(
-                      _status,
-                      style: TextStyle(fontSize: 18, color: Colors.black87),
+                    SizedBox(height: 30),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(double.infinity, 60),
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _scanning ? null : _startScanning,
+                      child: Text(
+                        _scanning ? 'Scanning...' : 'Start Scanning',
+                        style: TextStyle(fontSize: 18),
+                      ),
                     ),
-                  ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(double.infinity, 60),
+                        backgroundColor: Colors.grey[300],
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _closeDevice,
+                      child: Text(
+                        'Close Device',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(double.infinity, 50),
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _markAbsentStudents,
+                      child: Text(
+                        'Mark Students Absent',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                    Spacer(),
+                  ],
                 ),
-                trailing: IconButton(
-                  icon: Icon(Icons.refresh, color: Colors.deepPurple),
-                  onPressed: () {
-                    if (!_scanning) {
-                      _startScanning();
-                    }
-                  },
-                ),
               ),
             ),
-            SizedBox(height: 30),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 60),
-                backgroundColor: Colors.deepPurple,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: _scanning ? null : _startScanning,
-              child: Text(
-                _scanning ? 'Scanning...' : 'Start Scanning',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 60),
-                backgroundColor: Colors.grey[300],
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: _closeDevice,
-              child: Text(
-                'Close Device',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-            SizedBox(height: 30),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 50),
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: _markAbsentStudents,
-              child: Text(
-                'Mark Students Absent',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

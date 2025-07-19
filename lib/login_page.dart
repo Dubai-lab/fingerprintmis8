@@ -209,7 +209,10 @@ class _LoginPageState extends State<LoginPage> {
                             SizedBox(height: 16),
                             Text(
                               _status,
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(
+                                color: _status.toLowerCase().contains('success') ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),

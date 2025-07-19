@@ -49,7 +49,12 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
 
   Future<void> _addCourse() async {
     final courseName = _courseNameController.text.trim();
-    if (courseName.isEmpty || _selectedInstructorId == null || _startDate == null || _endDate == null) return;
+    if (courseName.isEmpty || _selectedInstructorId == null || _startDate == null || _endDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
+    }
 
     try {
       // Find instructor name from _instructors list
@@ -180,40 +185,64 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
                     Row(
                       children: [
                         Expanded(
-                          child: InputDatePickerFormField(
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2100),
-                            fieldLabelText: 'Start Date',
-                            initialDate: _startDate ?? DateTime.now(),
-                            onDateSubmitted: (date) {
-                              setState(() {
-                                _startDate = date;
-                              });
+                          child: GestureDetector(
+                            onTap: () async {
+                              DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: _startDate ?? DateTime.now(),
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime(2100),
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  _startDate = picked;
+                                });
+                              }
                             },
-                            onDateSaved: (date) {
-                              setState(() {
-                                _startDate = date;
-                              });
-                            },
+                            child: AbsorbPointer(
+                              child: TextFormField(
+                                decoration: InputDecoration(
+                                  labelText: 'Start Date',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                controller: TextEditingController(
+                                  text: _startDate == null ? '' : "${_startDate!.year}-${_startDate!.month.toString().padLeft(2,'0')}-${_startDate!.day.toString().padLeft(2,'0')}",
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                         SizedBox(width: 16),
                         Expanded(
-                          child: InputDatePickerFormField(
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2100),
-                            fieldLabelText: 'End Date',
-                            initialDate: _endDate ?? DateTime.now(),
-                            onDateSubmitted: (date) {
-                              setState(() {
-                                _endDate = date;
-                              });
+                          child: GestureDetector(
+                            onTap: () async {
+                              DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: _endDate ?? DateTime.now(),
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime(2100),
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  _endDate = picked;
+                                });
+                              }
                             },
-                            onDateSaved: (date) {
-                              setState(() {
-                                _endDate = date;
-                              });
-                            },
+                            child: AbsorbPointer(
+                              child: TextFormField(
+                                decoration: InputDecoration(
+                                  labelText: 'End Date',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                controller: TextEditingController(
+                                  text: _endDate == null ? '' : "${_endDate!.year}-${_endDate!.month.toString().padLeft(2,'0')}-${_endDate!.day.toString().padLeft(2,'0')}",
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],

@@ -187,17 +187,25 @@ class _InstructorDashboardPageState extends State<InstructorDashboardPage> {
               Card(
                 color: Colors.amber.shade100,
                 margin: EdgeInsets.only(bottom: 20),
-                child: ListTile(
-                  leading: Icon(Icons.warning, color: Colors.amber.shade800),
-                  title: Text(
-                    'You are using a default password. Please change it.',
-                    style: TextStyle(color: Colors.amber.shade800, fontWeight: FontWeight.bold),
-                  ),
-                  trailing: ElevatedButton(
-                    child: Text('Change Password'),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/change-password');
-                    },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning, color: Colors.amber.shade800),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'You are using a default password. Please change it.',
+                          style: TextStyle(color: Colors.amber.shade800, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      ElevatedButton(
+                        child: Text('Change Password'),
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/change-password');
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
