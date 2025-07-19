@@ -1,0 +1,25 @@
+@startuml
+title FingerprintMIS8 - Level 0 DFD (Context Diagram)
+
+skinparam rectangle {
+  BackgroundColor #f06292
+  BorderColor black
+  RoundCorner 15
+  FontColor black
+}
+
+skinparam actor {
+  BackgroundColor #4db6ac
+  BorderColor black
+  FontColor black
+}
+
+actor "D1 Users\n(Admin, Instructor,\nInvigilator, Security, Student)" as Users #4db6ac
+rectangle "1.0 FingerprintMIS8 System" as System #f06292
+actor "Fingerprint Device" as Device #4db6ac
+
+Users -[#0000FF]-> System : Authentication Access\nStudents Data
+Device -[#0000FF]-> System : Fingerprint Data
+System -[#0000FF]-> Users : Responses, Reports,\nVerification Results
+
+@enduml

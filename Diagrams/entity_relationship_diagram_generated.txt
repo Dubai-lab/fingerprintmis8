@@ -1,0 +1,100 @@
+Entities:
+
+User (Abstract)
+
+userId (PK, Firebase Auth UID)
+name
+email
+role (student, instructor, invigilator, admin, security)
+defaultPassword (bool, for instructors, invigilators, security)
+passwordSetTime (timestamp)
+Student
+
+regNumber (PK, sanitized for Firestore doc ID)
+name
+department
+fingerprintTemplate (base64 encoded)
+Stored in "students" collection
+Instructor
+
+userId (PK, Firebase Auth UID)
+name
+email
+role = 'instructor'
+defaultPassword, passwordSetTime
+Stored in "instructors" collection
+Invigilator
+
+userId (PK, Firebase Auth UID)
+name
+email
+role = 'invigilator'
+defaultPassword, passwordSetTime
+Stored in "invigilators" collection
+Admin
+
+userId (PK, Firebase Auth UID)
+name
+email
+role = 'admin'
+Stored in "admins" collection
+Security
+
+userId (PK, Firebase Auth UID)
+name
+email
+role = 'security'
+defaultPassword, passwordSetTime
+Stored in "security" collection
+Course
+
+courseId (PK)
+courseName
+session (Day, Evening, Weekend)
+instructorId (FK to Instructor.userId)
+startDate, endDate
+Stored in "instructor_courses" collection
+Students Joined to Course
+
+Stored as documents in "instructor_courses" -> courseId -> "students" subcollection
+Document ID = sanitized student regNumber
+Fields: joinedAt (timestamp)
+Attendance Session
+
+sessionId (PK, Firestore doc ID)
+courseId (FK to Course.courseId)
+sessionName
+createdAt (timestamp)
+Stored in "attendance_sessions" collection
+Attendance Record (Instructor)
+
+Document ID = sanitizedRegNumber_date
+regNumber
+courseId
+courseName
+sessionId
+status (Present, Absent)
+timestamp
+Stored in "instructor_courses" -> courseId -> "attendance" subcollection
+Attendance Record (Invigilator)
+
+Document ID = sanitizedRegNumber_activity_date
+regNumber
+activity (CAT, EXAM, CONFERENCE)
+courseId (nullable for CONFERENCE)
+status (Present)
+timestamp
+Stored in "invigilator_activities" -> activity -> "attendance" subcollection
+Fingerprint Data
+
+Managed in memory by fingerprint_sdk.dart
+Stored as base64 templates in "students" collection for students
+Relationships:
+
+User is generalized into Student, Instructor, Invigilator, Admin, Security.
+Students enroll in Courses via "students" subcollection under "instructor_courses".
+Instructors teach Courses via instructorId field in "instructor_courses".
+Attendance sessions link to Courses via courseId.
+Attendance records link Students to Courses and Sessions.
+Invigilator attendance records are activity-based and stored separately.
+Security personnel verify students using fingerprint data from "students" collection.

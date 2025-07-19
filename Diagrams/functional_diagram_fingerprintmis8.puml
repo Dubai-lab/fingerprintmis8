@@ -1,0 +1,95 @@
+@startuml FingerprintMIS8_Functional_Diagram
+
+package "User Roles" {
+  [Admin]
+  [Instructor]
+  [Invigilator]
+  [Security]
+  [Student]
+}
+
+package "User Management" {
+  [LoginPage]
+  [ChangePasswordPage]
+  [AdminRegistrationPage]
+  [InstructorRegistrationPage]
+  [InvigilatorRegistrationPage]
+  [SecurityRegistrationPage]
+  [StudentRegistrationPage]
+  [UserManagementPage]
+  [AdminDashboardPage]
+  [InstructorDashboardPage]
+  [InvigilatorDashboardPage]
+  [SecurityDashboardPage]
+}
+
+package "Attendance Management" {
+  [AttendancePage (Instructor)]
+  [AttendanceSessionsPage]
+  [AttendanceViewPage]
+  [InvigilatorAttendancePage]
+  [InvigilatorAttendanceReportPage]
+  [InvigilatorAttendanceSelectionPage]
+  [FingerprintEnrollmentPage]
+  [FingerprintSdk]
+  [SecurityVerificationPage]
+  [CreateCoursesPage]
+  [ManageCoursesPage]
+  [JoinStudentsPage]
+  [HistoryPage]
+}
+
+package "Data Management" {
+  [Firestore: users (students, instructors, invigilators, admins, security)]
+  [Firestore: instructor_courses]
+  [Firestore: attendance]
+  [Firestore: attendance_sessions]
+  [Firestore: invigilator_activities]
+  [Firestore: security_verification]
+  [Firebase Authentication]
+}
+
+package "Report Management" {
+  [InstructorAnalyticsPage]
+  [ExportExcelReportPage]
+}
+
+' Relationships
+[Admin] --> [AdminRegistrationPage]
+[Instructor] --> [InstructorRegistrationPage]
+[Invigilator] --> [InvigilatorRegistrationPage]
+[Security] --> [SecurityRegistrationPage]
+[Student] --> [StudentRegistrationPage]
+
+[LoginPage] --> [Firebase Authentication]
+[ChangePasswordPage] --> [Firebase Authentication]
+
+[FingerprintEnrollmentPage] --> [FingerprintSdk]
+[FingerprintSdk] --> [Data Management]
+
+[AttendancePage (Instructor)] --> [Data Management]
+[AttendanceSessionsPage] --> [Data Management]
+[AttendanceViewPage] --> [Data Management]
+
+[InvigilatorAttendancePage] --> [Data Management]
+[InvigilatorAttendanceReportPage] --> [Data Management]
+[InvigilatorAttendanceSelectionPage] --> [Data Management]
+
+[SecurityVerificationPage] --> [Data Management]
+
+[CreateCoursesPage] --> [Data Management]
+[ManageCoursesPage] --> [Data Management]
+[JoinStudentsPage] --> [Data Management]
+[HistoryPage] --> [Data Management]
+
+[InstructorAnalyticsPage] --> [Data Management]
+[ExportExcelReportPage] --> [Data Management]
+
+[UserManagementPage] --> [Data Management]
+
+[AdminDashboardPage] --> [UserManagementPage]
+[InstructorDashboardPage] --> [AttendancePage (Instructor)]
+[InvigilatorDashboardPage] --> [InvigilatorAttendancePage]
+[SecurityDashboardPage] --> [SecurityVerificationPage]
+
+@enduml

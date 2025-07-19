@@ -1,0 +1,18 @@
+@startuml
+title FingerprintMIS8 - Level 2 DFD: Reporting & Analytics
+
+actor "Users (Admin, Instructor, Invigilator, Security)" as Users #4db6ac
+rectangle "5.1 Generate Reports" as GenerateReports #f06292
+rectangle "5.2 Export Reports" as ExportReports #f06292
+database "D2 Reports Data" as ReportsDB #ba68c8
+
+Users -[#0000FF]-> GenerateReports : Report Requests
+Users -[#0000FF]-> ExportReports : Export Requests
+
+GenerateReports -[#0000FF]-> ReportsDB : Query Data
+ExportReports -[#0000FF]-> ReportsDB : Retrieve Data
+
+ReportsDB -[#0000FF]-> GenerateReports : Report Data
+ReportsDB -[#0000FF]-> ExportReports : Export Data
+
+@enduml

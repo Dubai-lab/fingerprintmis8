@@ -1,0 +1,21 @@
+@startuml
+title FingerprintMIS8 - Level 2 DFD: User Management
+
+actor "Users (Admin, Instructor, Invigilator, Security, Student)" as Users #4db6ac
+rectangle "1.1 Register User" as RegisterUser #f06292
+rectangle "1.2 Authenticate User" as AuthenticateUser #f06292
+rectangle "1.3 Manage Profile" as ManageProfile #f06292
+database "D2 Users Collection" as UsersDB #ba68c8
+
+Users -[#0000FF]-> RegisterUser : Registration Data
+Users -[#0000FF]-> AuthenticateUser : Login Credentials
+Users -[#0000FF]-> ManageProfile : Profile Updates
+
+RegisterUser -[#0000FF]-> UsersDB : Store User Data
+AuthenticateUser -[#0000FF]-> UsersDB : Verify Credentials
+ManageProfile -[#0000FF]-> UsersDB : Update User Data
+
+UsersDB -[#0000FF]-> AuthenticateUser : Authentication Result
+UsersDB -[#0000FF]-> ManageProfile : Current Profile Data
+
+@enduml
