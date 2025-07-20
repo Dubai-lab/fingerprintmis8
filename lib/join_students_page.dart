@@ -14,11 +14,27 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
   String? _selectedCourseId;
   List<String> _selectedStudentIds = [];
   String _searchRegNumber = '';
+  String? _courseDepartment;
 
   Future<List<String>> _getJoinedStudentIds() async {
     if (_selectedCourseId == null) return [];
     final snapshot = await _firestore.collection('instructor_courses').doc(_selectedCourseId).collection('students').get();
     return snapshot.docs.map((doc) => doc.id).toList();
+  }
+
+  Future<void> _fetchCourseDepartment() async {
+    if (_selectedCourseId == null) {
+      setState(() {
+        _courseDepartment = null;
+      });
+      return;
+    }
+    final courseDoc = await _firestore.collection('instructor_courses').doc(_selectedCourseId).get();
+    if (courseDoc.exists) {
+      setState(() {
+        _courseDepartment = courseDoc.get('department') ?? null;
+      });
+    }
   }
 
   @override
@@ -62,11 +78,12 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
                       child: Text(course['courseName'] ?? 'Unnamed Course'),
                     );
                   }).toList(),
-                  onChanged: (value) {
+                  onChanged: (value) async {
                     setState(() {
                       _selectedCourseId = value;
                       _selectedStudentIds.clear();
                     });
+                    await _fetchCourseDepartment();
                   },
                 );
               },
@@ -106,10 +123,20 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
                       final students = snapshot.data!.docs.where((student) {
                         final studentId = student.id;
                         final regNumber = student['regNumber'] ?? '';
+                        final department = student['department'] ?? '';
                         final matchesSearch = _searchRegNumber.isEmpty || regNumber.contains(_searchRegNumber);
                         final notJoined = !joinedStudentIds.contains(studentId);
                         return matchesSearch && notJoined;
                       }).toList();
+
+                      // Filter students by selected course's department
+                      if (_selectedCourseId != null && _courseDepartment != null) {
+                        students.retainWhere((student) {
+                          final studentDept = student['department'] ?? '';
+                          return studentDept == _courseDepartment;
+                        });
+                      }
+
                       return ListView(
                         children: students.map((student) {
                           final studentId = student.id;

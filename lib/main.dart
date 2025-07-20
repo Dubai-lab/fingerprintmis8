@@ -23,6 +23,7 @@ import 'security_dashboard_page.dart';
 import 'security_verification_page.dart';
 import 'manage_courses_page.dart';
 import 'history_page.dart';
+import 'joined_students_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
         '/security_verification': (context) => SecurityVerificationPage(),
         '/manage_courses': (context) => ManageCoursesPage(),
         '/history': (context) => const HistoryPage(),
+        '/joined_students': (context) => const JoinedStudentsPage(),
       },
     );
   }

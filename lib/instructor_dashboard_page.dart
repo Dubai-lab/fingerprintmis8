@@ -1,6 +1,8 @@
 import 'package:fingerprintmis8/attendance_page.dart';
 import 'package:fingerprintmis8/attendance_view_page.dart';
 import 'package:fingerprintmis8/instructor_settings_page.dart';
+import 'package:fingerprintmis8/join_students_page.dart';
+import 'package:fingerprintmis8/joined_students_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -149,6 +151,25 @@ class _InstructorDashboardPageState extends State<InstructorDashboardPage> {
                     },
                   ),
                   ListTile(
+                    leading: Icon(Icons.group),
+                    title: Text('Joined Students'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => JoinedStudentsPage()),
+                      );
+                    },
+                  ),
+                  ListTile(
+              leading: Icon(Icons.history, color: Colors.deepPurple),
+              title: Text('Course History', style: TextStyle(fontSize: 18)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/history');
+              },
+            ),
+                  ListTile(
                     leading: Icon(Icons.settings, color: Colors.deepPurple),
                     title: Text('Settings', style: TextStyle(fontSize: 18)),
                     onTap: () {
@@ -162,14 +183,7 @@ class _InstructorDashboardPageState extends State<InstructorDashboardPage> {
                 ],
               ),
             ),
-            ListTile(
-              leading: Icon(Icons.history, color: Colors.deepPurple),
-              title: Text('Course History', style: TextStyle(fontSize: 18)),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/history');
-              },
-            ),
+            
             Divider(height: 1),
             ListTile(
               leading: Icon(Icons.logout, color: Colors.deepPurple),

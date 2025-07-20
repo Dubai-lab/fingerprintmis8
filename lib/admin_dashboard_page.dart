@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:fingerprintmis8/admin_registration_page.dart';
 import 'package:fingerprintmis8/join_students_page.dart';
+import 'package:fingerprintmis8/joined_students_page.dart';
 import 'package:fingerprintmis8/manage_courses_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -231,6 +232,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => JoinStudentsPage()),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.group),
+                    title: Text('Joined Students'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => JoinedStudentsPage()),
                       );
                     },
                   ),

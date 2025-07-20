@@ -17,6 +17,7 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
   String _selectedSession = 'Day';
   String? _selectedInstructorId;
   List<Map<String, dynamic>> _instructors = [];
+  final TextEditingController _departmentController = TextEditingController();
 
   DateTime? _startDate;
   DateTime? _endDate;
@@ -47,9 +48,11 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
     }
   }
 
+  // Removed _loadDepartments method as departments are input as free text in _departmentController
+
   Future<void> _addCourse() async {
     final courseName = _courseNameController.text.trim();
-    if (courseName.isEmpty || _selectedInstructorId == null || _startDate == null || _endDate == null) {
+    if (courseName.isEmpty || _selectedInstructorId == null || _startDate == null || _endDate == null || _departmentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please fill all required fields')),
       );
@@ -71,6 +74,7 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
         'session': _selectedSession,
         'startDate': _startDate,
         'endDate': _endDate,
+        'department': _departmentController.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
       });
       _courseNameController.clear();
@@ -78,6 +82,7 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
         _selectedSession = 'Day';
         _startDate = null;
         _endDate = null;
+        _departmentController.clear();
         if (_instructors.isNotEmpty) {
           _selectedInstructorId = _instructors[0]['id'];
         }
@@ -180,6 +185,19 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
                           _selectedInstructorId = value;
                         });
                       },
+                    ),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      controller: _departmentController,
+                      decoration: InputDecoration(
+                        labelText: 'Department',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: Icon(Icons.school, color: Colors.deepPurple),
+                      ),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'Enter department' : null,
                     ),
                     SizedBox(height: 16),
                     Row(

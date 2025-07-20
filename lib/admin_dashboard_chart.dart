@@ -127,16 +127,16 @@ class AdminDashboardChart extends StatelessWidget {
     String text;
     switch (value.toInt()) {
       case 0:
-        text = 'Students';
+        text = 'STD';
         break;
       case 1:
-        text = 'Instructors';
+        text = 'INS';
         break;
       case 2:
-        text = 'Invigilators';
+        text = 'INV';
         break;
       case 3:
-        text = 'Security';
+        text = 'SEC';
         break;
       default:
         text = '';
