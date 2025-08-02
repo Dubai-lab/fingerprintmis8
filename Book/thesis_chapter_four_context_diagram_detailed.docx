@@ -1,0 +1,5 @@
+4.5 Context Diagram
+
+The context diagram provides a high-level view of the Fingerprint-Based Attendance and Management System, depicting its interactions with external entities such as users, biometric devices, and administrative systems.
+
+It shows the system as a single process with data flows to and from external actors, illustrating the boundaries and scope of the system. This diagram helps in understanding the overall environment in which the system operates and the key interfaces involved.

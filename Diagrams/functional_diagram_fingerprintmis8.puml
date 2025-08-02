@@ -1,95 +1,85 @@
-@startuml FingerprintMIS8_Functional_Diagram
-
-package "User Roles" {
-  [Admin]
-  [Instructor]
-  [Invigilator]
-  [Security]
-  [Student]
+@startuml
+skinparam rectangle {
+  BackgroundColor #E0F7FA
+  BorderColor #00796B
+  RoundCorner 15
+  Shadowing true
+  FontColor #004D40
+  FontSize 14
+  FontName Arial
+}
+skinparam arrow {
+  Color #00796B
+  Thickness 3
+  FontSize 12
+  FontName Arial
 }
 
-package "User Management" {
-  [LoginPage]
-  [ChangePasswordPage]
-  [AdminRegistrationPage]
-  [InstructorRegistrationPage]
-  [InvigilatorRegistrationPage]
-  [SecurityRegistrationPage]
-  [StudentRegistrationPage]
-  [UserManagementPage]
-  [AdminDashboardPage]
-  [InstructorDashboardPage]
-  [InvigilatorDashboardPage]
-  [SecurityDashboardPage]
+title "Functional Diagram - Fingerprint MIS"
+
+rectangle "Fingerprint MIS" as system #B2DFDB {
+  rectangle "User Management" as UM #80CBC4 {
+    rectangle "Enrollment of User" as UM1
+    rectangle "Manage User Roles" as UM2
+    rectangle "Register Course" as UM3
+    rectangle "Manage Course Enrollment" as UM4
+    rectangle "Login/Logout" as UM5
+    rectangle "Fingerprint Enrollment" as UM6
+    rectangle "Security Verification" as UM7
+    rectangle "User Profile Management" as UM8
+    rectangle "Change Password" as UM9
+    rectangle "Joined Students Management" as UM10
+  }
+  
+  rectangle "Attendance Management" as AM #80CBC4 {
+    rectangle "Select Course" as AM1
+    rectangle "Select Attendance Type" as AM2
+    rectangle "Register Attendance" as AM3
+    rectangle "View Attendance" as AM4
+  }
+  
+  rectangle "Data Management" as DM #80CBC4 {
+    rectangle "Store Users Details" as DM1
+    rectangle "Manage Attendance" as DM2
+    rectangle "Manage Course Details" as DM3
+    rectangle "History/Analytics" as DM4
+  }
+  
+  rectangle "Report Management" as RM #80CBC4 {
+    rectangle "Request Report" as RM1
+    rectangle "Generate Report" as RM2
+    rectangle "Export Report" as RM3
+  }
 }
 
-package "Attendance Management" {
-  [AttendancePage (Instructor)]
-  [AttendanceSessionsPage]
-  [AttendanceViewPage]
-  [InvigilatorAttendancePage]
-  [InvigilatorAttendanceReportPage]
-  [InvigilatorAttendanceSelectionPage]
-  [FingerprintEnrollmentPage]
-  [FingerprintSdk]
-  [SecurityVerificationPage]
-  [CreateCoursesPage]
-  [ManageCoursesPage]
-  [JoinStudentsPage]
-  [HistoryPage]
-}
+system --> UM
+system --> AM
+system --> DM
+system --> RM
 
-package "Data Management" {
-  [Firestore: users (students, instructors, invigilators, admins, security)]
-  [Firestore: instructor_courses]
-  [Firestore: attendance]
-  [Firestore: attendance_sessions]
-  [Firestore: invigilator_activities]
-  [Firestore: security_verification]
-  [Firebase Authentication]
-}
+UM --> UM1
+UM --> UM2
+UM --> UM3
+UM --> UM4
+UM --> UM5
+UM --> UM6
+UM --> UM7
+UM --> UM8
+UM --> UM9
+UM --> UM10
 
-package "Report Management" {
-  [InstructorAnalyticsPage]
-  [ExportExcelReportPage]
-}
+AM --> AM1
+AM --> AM2
+AM --> AM3
+AM --> AM4
 
-' Relationships
-[Admin] --> [AdminRegistrationPage]
-[Instructor] --> [InstructorRegistrationPage]
-[Invigilator] --> [InvigilatorRegistrationPage]
-[Security] --> [SecurityRegistrationPage]
-[Student] --> [StudentRegistrationPage]
+DM --> DM1
+DM --> DM2
+DM --> DM3
+DM --> DM4
 
-[LoginPage] --> [Firebase Authentication]
-[ChangePasswordPage] --> [Firebase Authentication]
-
-[FingerprintEnrollmentPage] --> [FingerprintSdk]
-[FingerprintSdk] --> [Data Management]
-
-[AttendancePage (Instructor)] --> [Data Management]
-[AttendanceSessionsPage] --> [Data Management]
-[AttendanceViewPage] --> [Data Management]
-
-[InvigilatorAttendancePage] --> [Data Management]
-[InvigilatorAttendanceReportPage] --> [Data Management]
-[InvigilatorAttendanceSelectionPage] --> [Data Management]
-
-[SecurityVerificationPage] --> [Data Management]
-
-[CreateCoursesPage] --> [Data Management]
-[ManageCoursesPage] --> [Data Management]
-[JoinStudentsPage] --> [Data Management]
-[HistoryPage] --> [Data Management]
-
-[InstructorAnalyticsPage] --> [Data Management]
-[ExportExcelReportPage] --> [Data Management]
-
-[UserManagementPage] --> [Data Management]
-
-[AdminDashboardPage] --> [UserManagementPage]
-[InstructorDashboardPage] --> [AttendancePage (Instructor)]
-[InvigilatorDashboardPage] --> [InvigilatorAttendancePage]
-[SecurityDashboardPage] --> [SecurityVerificationPage]
+RM --> RM1
+RM --> RM2
+RM --> RM3
 
 @enduml

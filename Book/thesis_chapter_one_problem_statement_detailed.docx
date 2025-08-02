@@ -1,0 +1,11 @@
+1.2 Problem Statement
+
+Attendance management remains a significant challenge in educational institutions worldwide. Traditional methods such as manual roll calls, paper-based registers, and card-swipe systems are often inefficient, time-consuming, and prone to errors. These conventional approaches are vulnerable to fraudulent practices, including proxy attendance, where students mark attendance on behalf of absent peers, thereby compromising the integrity of attendance records.
+
+The inaccuracies and inefficiencies inherent in these systems not only affect the reliability of attendance data but also have broader implications on academic performance monitoring, resource allocation, and institutional accountability. Inaccurate attendance records can lead to misinformed decisions by educators and administrators, potentially impacting student outcomes and institutional reputation.
+
+Moreover, the increasing scale and complexity of educational institutions necessitate more robust and scalable attendance management solutions. The manual processes struggle to keep pace with growing student populations and diverse user roles such as instructors, invigilators, and security personnel, each requiring tailored access and functionalities.
+
+While biometric technologies have been proposed as a solution, challenges remain in integrating fingerprint recognition systems seamlessly with comprehensive Management Information Systems (MIS) that cater to the multifaceted needs of educational institutions. Issues such as hardware compatibility, data security, user privacy, and system scalability must be addressed to ensure effective deployment and adoption.
+
+This project seeks to address these challenges by developing a Fingerprint-Based Attendance and MIS that leverages biometric authentication to enhance accuracy and security while providing a centralized platform for attendance tracking, user management, and reporting. The system aims to overcome the limitations of traditional methods and existing biometric solutions by offering a user-friendly, scalable, and secure application tailored to the unique requirements of educational environments.

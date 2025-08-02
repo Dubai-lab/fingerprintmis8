@@ -1,0 +1,31 @@
+@startuml
+' Report Table Structure
+
+skinparam entity {
+  BackgroundColor #f06292
+  BorderColor black
+  FontColor black
+}
+
+entity "Report" as Report {
+  + reportID : String [PK]
+  --
+  generatedBy : String [FK]
+  dateGenerated : DateTime
+  reportType : String
+  content : Text
+}
+
+note right of Report
+  **Report Table**
+  Stores generated reports in the system.
+  
+  **Columns:**
+  - reportID: Unique identifier for each report (Primary Key)
+  - generatedBy: Reference to the user who generated the report (Foreign Key)
+  - dateGenerated: Date and time when report was generated
+  - reportType: Type of report (e.g., attendance, analytics)
+  - content: Text content of the report
+end note
+
+@enduml

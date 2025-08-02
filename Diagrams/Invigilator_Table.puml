@@ -1,0 +1,33 @@
+@startuml
+' Invigilator Table Structure
+
+skinparam entity {
+  BackgroundColor #f06292
+  BorderColor black
+  FontColor black
+}
+
+entity "Invigilator" as Invigilator {
+  + invigilatorID : String [PK]
+  --
+  userID : String [FK]
+  assignedExams : String
+  availability : String
+  certification : String
+  experience : String
+}
+
+note right of Invigilator
+  **Invigilator Table**
+  Stores specific information for invigilator users.
+  
+  **Columns:**
+  - invigilatorID: Unique identifier for each invigilator (Primary Key)
+  - userID: Reference to the main user record (Foreign Key)
+  - assignedExams: List of exams assigned to invigilate
+  - availability: Schedule availability for exam duties
+  - certification: Relevant certifications for invigilation
+  - experience: Years of experience in exam invigilation
+end note
+
+@enduml

@@ -1,0 +1,5 @@
+4.6 Data Flow Diagram (DFD)
+
+The Data Flow Diagram (DFD) represents the flow of data within the Fingerprint-Based Attendance and Management System. It illustrates how data moves between processes, data stores, and external entities.
+
+The DFD helps in identifying the inputs, outputs, and storage points of data, providing a clear understanding of the system's data processing and management. It serves as a foundation for system design and implementation.

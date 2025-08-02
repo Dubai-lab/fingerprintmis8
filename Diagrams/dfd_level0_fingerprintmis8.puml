@@ -14,12 +14,26 @@ skinparam actor {
   FontColor black
 }
 
-actor "D1 Users\n(Admin, Instructor,\nInvigilator, Security, Student)" as Users #4db6ac
+actor "Admin" as Admin #4db6ac
+actor "Student" as Student #4db6ac
+actor "Instructor" as Instructor #4db6ac
+actor "Invigilator" as Invigilator #4db6ac
+actor "Security" as Security #4db6ac
+
 rectangle "1.0 FingerprintMIS8 System" as System #f06292
 actor "Fingerprint Device" as Device #4db6ac
 
-Users -[#0000FF]-> System : Authentication Access\nStudents Data
+Admin -[#0000FF]-> System : Authentication Data\nManages system\nRegisters users
+Student -[#0000FF]-> System : Authentication Data\nTakes attendance
+Instructor -[#0000FF]-> System : Authentication Data\nManages courses\nRecords attendance
+Invigilator -[#0000FF]-> System : Authentication Data\nOversees exams\nRecords attendance
+Security -[#0000FF]-> System : Verifies identity
+
 Device -[#0000FF]-> System : Fingerprint Data
-System -[#0000FF]-> Users : Responses, Reports,\nVerification Results
+System -[#0000FF]-> Admin : Responses, Reports
+System -[#0000FF]-> Student : Responses, Reports
+System -[#0000FF]-> Instructor : Responses, Reports
+System -[#0000FF]-> Invigilator : Responses, Reports
+System -[#0000FF]-> Security : Verification Results
 
 @enduml

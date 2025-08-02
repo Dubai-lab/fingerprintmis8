@@ -1,0 +1,17 @@
+1.5 Scope and Limitation
+
+This study focuses on the design, development, and implementation of a Fingerprint-Based Attendance and Management Information System (MIS) tailored for educational institutions. The system aims to provide a secure, efficient, and user-friendly platform for attendance tracking, user management, and reporting, leveraging biometric fingerprint authentication and cloud-based backend services.
+
+The scope of the project includes the development of a cross-platform mobile application using Flutter, supporting multiple user roles such as students, instructors, invigilators, and security personnel. Each user role is provided with specific functionalities and access controls to ensure appropriate system usage and data privacy.
+
+The system integrates fingerprint scanning hardware through a custom Software Development Kit (SDK) to facilitate biometric authentication within the mobile application. Backend services are implemented using Firebase, encompassing authentication, real-time database, cloud functions, and storage to support data management and processing.
+
+The project also covers real-time attendance tracking, comprehensive reporting, and user management features, enabling stakeholders to monitor attendance patterns and generate necessary reports for administrative purposes.
+
+However, certain limitations are acknowledged in this study. The system’s performance and accuracy are dependent on the quality and compatibility of the fingerprint scanning hardware used. Variations in hardware capabilities may affect the consistency of biometric authentication.
+
+The system is designed primarily for educational institutions and may require modifications to adapt to other organizational contexts. Additionally, while data security measures are implemented, the system’s security is contingent upon the underlying cloud infrastructure and adherence to best practices in data privacy.
+
+The study does not cover the development of physical fingerprint scanning devices but focuses on software integration and system implementation. Furthermore, the system’s scalability and performance under extremely large user bases have not been extensively tested and may require further evaluation.
+
+Overall, the scope and limitations outlined provide a clear framework for the project’s objectives and boundaries, guiding the development process and setting realistic expectations for system capabilities and deployment.

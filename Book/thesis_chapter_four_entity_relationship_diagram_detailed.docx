@@ -1,0 +1,5 @@
+4.8 Entity Relationship Diagram (ERD)
+
+The Entity Relationship Diagram (ERD) models the data entities, their attributes, and the relationships between them within the Fingerprint-Based Attendance and Management System. It provides a visual representation of the database structure, facilitating understanding of data organization and constraints.
+
+Key entities include Users, Attendance Records, Sessions, Reports, and Roles. The ERD defines primary keys, foreign keys, and cardinality, ensuring data integrity and supporting efficient database design.

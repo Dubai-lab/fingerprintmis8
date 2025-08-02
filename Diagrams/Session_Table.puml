@@ -1,0 +1,31 @@
+@startuml
+' Session Table Structure
+
+skinparam entity {
+  BackgroundColor #f06292
+  BorderColor black
+  FontColor black
+}
+
+entity "Session" as Session {
+  + sessionID : String [PK]
+  --
+  courseID : String [FK]
+  date : Date
+  time : Time
+  location : String
+}
+
+note right of Session
+  **Session Table**
+  Stores information about course sessions/meetings.
+  
+  **Columns:**
+  - sessionID: Unique identifier for each session (Primary Key)
+  - courseID: Reference to the course (Foreign Key)
+  - date: Date of the session
+  - time: Time of the session
+  - location: Location where the session is held
+end note
+
+@enduml

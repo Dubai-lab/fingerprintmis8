@@ -1,0 +1,30 @@
+@startuml
+' Course Student Table Structure
+
+skinparam entity {
+  BackgroundColor #f06292
+  BorderColor black
+  FontColor black
+}
+
+entity "CourseStudent" as CourseStudent {
+  + courseId_studentId : String [PK]
+  --
+  courseId : String [FK]
+  studentId : String [FK]
+  joinedAt : DateTime
+}
+
+note right of CourseStudent
+  **Course Student Table**
+  Stores information about students enrolled in courses.
+  This is a junction table that links students to courses.
+  
+  **Columns:**
+  - courseId_studentId: Composite primary key (courseId + studentId)
+  - courseId: Reference to the course (Foreign Key)
+  - studentId: Reference to the student (Foreign Key)
+  - joinedAt: Timestamp when the student was enrolled in the course
+end note
+
+@enduml

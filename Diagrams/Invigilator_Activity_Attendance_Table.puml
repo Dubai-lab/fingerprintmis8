@@ -1,0 +1,36 @@
+@startuml
+' Invigilator Activity Attendance Table Structure
+
+skinparam entity {
+  BackgroundColor #f06292
+  BorderColor black
+  FontColor black
+}
+
+entity "InvigilatorActivityAttendance" as InvigilatorActivityAttendance {
+  + attendanceId : String [PK]
+  --
+  activityId : String [FK]
+  courseId : String [FK]
+  studentId : String [FK]
+  regNumber : String
+  status : String
+  timestamp : DateTime
+}
+
+note right of InvigilatorActivityAttendance
+  **Invigilator Activity Attendance Table**
+  Stores attendance records for students in invigilator activities (exams, CATs, etc.).
+  This table is used as a subcollection within invigilator_activities.
+  
+  **Columns:**
+  - attendanceId: Unique identifier for each attendance record (Primary Key)
+  - activityId: Reference to the invigilator activity (Foreign Key)
+  - courseId: Reference to the course (Foreign Key)
+  - studentId: Reference to the student (Foreign Key)
+  - regNumber: Registration number of the student
+  - status: Attendance status (Present/Absent)
+  - timestamp: Date and time of attendance record
+end note
+
+@enduml

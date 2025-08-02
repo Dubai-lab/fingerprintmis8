@@ -1,0 +1,7 @@
+3.6 Problem Analysis
+
+The existing attendance management system faces several critical issues that hinder its effectiveness and reliability. Manual record-keeping is prone to human error, leading to inaccurate attendance data and increased administrative workload. The reliance on physical registers also makes the system vulnerable to proxy attendance, where individuals may sign in on behalf of others.
+
+Electronic systems using RFID and barcode technologies, while faster, do not fully address security concerns and can be susceptible to card sharing or loss. The lack of real-time data synchronization results in delays in attendance tracking and reporting, affecting timely decision-making.
+
+Furthermore, the absence of biometric verification limits the system's ability to uniquely identify individuals, compromising the integrity of attendance records. These challenges necessitate the development of a more secure, efficient, and automated attendance management system that leverages biometric technology to enhance accuracy and accountability.

@@ -1,0 +1,11 @@
+1.0 Introduction
+
+Attendance management is a vital function within educational institutions, serving as a cornerstone for monitoring student engagement, ensuring academic integrity, and facilitating administrative decision-making. Accurate attendance records are essential not only for compliance with institutional policies but also for enhancing the overall educational experience by identifying patterns of student participation and absenteeism.
+
+Traditional attendance systems, such as manual roll calls, paper-based registers, or card-swipe mechanisms, have long been the norm in many institutions. However, these methods are often fraught with challenges including human error, time consumption, and susceptibility to fraudulent practices such as proxy attendance. These limitations can lead to inaccurate records, which in turn affect academic assessments, resource allocation, and institutional reporting.
+
+The advent of biometric technologies has introduced new possibilities for improving attendance management. Among these, fingerprint recognition stands out due to its uniqueness, reliability, and ease of use. Fingerprint-based systems offer a secure and automated means of verifying individual identities, thereby minimizing the risks associated with traditional methods.
+
+This thesis explores the design and implementation of a Fingerprint-Based Attendance and Management Information System (MIS) tailored for educational institutions. The system integrates biometric fingerprint authentication with a comprehensive MIS platform that supports multiple user roles including students, instructors, invigilators, and security personnel. By leveraging modern technologies such as Flutter for cross-platform mobile development and Firebase for backend services, the system aims to provide a scalable, efficient, and user-friendly solution to attendance management challenges.
+
+The following sections will delve into the background of biometric attendance systems, the problem statement motivating this research, the objectives guiding the project, and the scope and limitations defining its boundaries. This comprehensive introduction sets the stage for a detailed examination of the system’s design, implementation, and evaluation in subsequent chapters.

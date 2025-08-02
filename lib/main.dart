@@ -24,6 +24,7 @@ import 'security_verification_page.dart';
 import 'manage_courses_page.dart';
 import 'history_page.dart';
 import 'joined_students_page.dart';
+import 'user_profile_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +71,7 @@ class MyApp extends StatelessWidget {
         '/manage_courses': (context) => ManageCoursesPage(),
         '/history': (context) => const HistoryPage(),
         '/joined_students': (context) => const JoinedStudentsPage(),
+        '/user_profile': (context) => const UserProfilePage(),
       },
     );
   }

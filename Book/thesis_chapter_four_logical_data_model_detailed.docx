@@ -1,0 +1,11 @@
+4.9 Logical Data Model
+
+The Logical Data Model defines the structure of data elements and their relationships without considering physical implementation details. It provides a blueprint for database design, focusing on entities, attributes, and normalization.
+
+4.9.1 Data Dictionary (DD)
+
+The Data Dictionary describes each data element, including its name, type, size, and description. It serves as a reference for developers and database administrators to ensure consistent data usage.
+
+4.9.2 Physical Data Model
+
+The Physical Data Model translates the logical design into a physical structure optimized for the chosen database system. It includes table definitions, indexes, constraints, and storage considerations to support efficient data access and integrity.

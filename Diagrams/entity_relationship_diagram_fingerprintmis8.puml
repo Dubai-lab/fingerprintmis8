@@ -1,0 +1,117 @@
+@startuml
+' Entity Relationship Diagram for Fingerprint MIS
+
+entity "Users" as Users {
+  * user_id : UUID
+  --
+  user_type : string
+  name : string
+  email : string
+  password : string
+  created_at : datetime
+}
+
+entity "Students" as Students {
+  * student_id : UUID
+  --
+  name : string
+  department : string
+  level : string
+  faculty : string
+  id_number : string
+  campus : string
+  fingerprint_identifier : string
+  created_at : datetime
+}
+
+entity "Courses" as Courses {
+  * course_id : UUID
+  --
+  course_name : string
+  created_at : datetime
+}
+
+entity "Student_Course" as StudentCourse {
+  * enrollment_id : UUID
+  --
+  student_id : UUID
+  course_id : UUID
+  created_at : datetime
+}
+
+entity "Lecturers" as Lecturers {
+  * lecturer_id : UUID
+  --
+  lecturer_name : string
+  email : string
+  password : string
+  department : string
+  created_at : datetime
+}
+
+entity "Invigilators" as Invigilators {
+  * invigilator_id : UUID
+  --
+  invigilator_name : string
+  email : string
+  password : string
+  department : string
+  created_at : datetime
+}
+
+entity "Attendance" as Attendance {
+  * attendance_id : UUID
+  --
+  student_nfc_identifier : string
+  course_id : UUID
+  lecturer_id : UUID
+  attendance_date : date
+  attendance_type : string
+  attendance_status : string
+}
+
+entity "Attendance_Log" as AttendanceLog {
+  * log_id : UUID
+  --
+  attendance_id : UUID
+  action : string
+  changed_by : UUID
+  timestamp : datetime
+}
+
+entity "Security" as Security {
+  * security_id : UUID
+  --
+  security_name : string
+  email : string
+  password : string
+  department : string
+  created_at : datetime
+}
+
+entity "Admin" as Admin {
+  * admin_id : UUID
+  --
+  admin_name : string
+  email : string
+  password : string
+  department : string
+  created_at : datetime
+}
+
+' Relationships
+Users "1" ||--o{ "M" AttendanceLog : "manages"
+Attendance "1" ||--o{ "M" AttendanceLog : "has"
+Courses "1" ||--o{ "M" StudentCourse : "consists of"
+Students "1" ||--o{ "M" StudentCourse : "enrolls in"
+Lecturers "1" ||--o{ "M" Courses : "offers"
+Invigilators "1" ||--o{ "M" Courses : "oversees"
+StudentCourse }|..|| Courses : "belongs to"
+StudentCourse }|..|| Students : "belongs to"
+Attendance }|..|| Students : "records"
+Attendance }|..|| Courses : "records"
+Attendance }|..|| Lecturers : "records"
+Security "1" ||--o{ "M" AttendanceLog : "manages"
+Admin "1" ||--o{ "M" AttendanceLog : "manages"
+Admin "1" ||--o{ "M" Users : "registers"
+@enduml

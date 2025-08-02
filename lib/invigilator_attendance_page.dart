@@ -68,21 +68,47 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
   Future<void> _loadCourses() async {
     try {
       final now = DateTime.now();
+
+      // For CAT and EXAM, get courses with attendance already marked today for the selected activity
+      List<String> excludedCourseIds = [];
+      if (_selectedActivity == 'CAT' || _selectedActivity == 'EXAM') {
+        final attendanceSnapshot = await FirebaseFirestore.instance
+            .collection('invigilator_activities')
+            .doc(_selectedActivity)
+            .collection('attendance')
+            .where('timestamp', isGreaterThanOrEqualTo: DateTime(now.year, now.month, now.day))
+            .get();
+
+        excludedCourseIds = attendanceSnapshot.docs
+            .map((doc) => doc.data()['courseId'] as String?)
+            .where((courseId) => courseId != null)
+            .cast<String>()
+            .toSet()
+            .toList();
+      }
+
       final querySnapshot = await FirebaseFirestore.instance
           .collection('instructor_courses')
           .where('endDate', isGreaterThan: now)
           .get();
 
+      List<Map<String, dynamic>> filteredCourses = querySnapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            return {
+              'id': doc.id,
+              'name': data['courseName'] ?? 'Unnamed Course',
+            };
+          })
+          .where((course) => !excludedCourseIds.contains(course['id']))
+          .toList();
+
       setState(() {
-        _courses = querySnapshot.docs.map((doc) {
-          final data = doc.data();
-          return {
-            'id': doc.id,
-            'name': data['courseName'] ?? 'Unnamed Course',
-          };
-        }).toList();
+        _courses = filteredCourses;
         if (_courses.isNotEmpty) {
           _selectedCourseId = _courses.first['id'];
+        } else {
+          _selectedCourseId = null;
         }
       });
     } catch (e) {
@@ -291,15 +317,16 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
                   child: Text(activity),
                 );
               }).toList(),
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() {
                   _selectedActivity = value;
                   if (_selectedActivity == 'CONFERENCE') {
                     _selectedCourseId = null;
-                  } else if (_courses.isNotEmpty) {
-                    _selectedCourseId = _courses.first['id'];
                   }
                 });
+                if (_selectedActivity != 'CONFERENCE') {
+                  await _loadCourses();
+                }
               },
             ),
             SizedBox(height: 20),

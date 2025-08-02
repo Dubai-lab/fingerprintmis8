@@ -1,0 +1,35 @@
+1.4 Objectives
+
+The objectives of this study are designed to guide the development and evaluation of a Fingerprint-Based Attendance and Management Information System (MIS) that addresses the limitations of traditional attendance methods and leverages modern biometric and information technologies.
+
+1.4.1 General Objectives
+
+The general objective of this research is to design, develop, and implement a reliable and efficient fingerprint-based attendance system integrated with a comprehensive MIS to improve attendance accuracy, security, and administrative efficiency in educational institutions.
+
+1.4.2 Specific Objectives
+
+- To develop a cross-platform mobile application using Flutter that supports multiple user roles including students, instructors, invigilators, and security personnel, each with tailored functionalities and access controls.
+
+- To integrate fingerprint scanning hardware through a custom Software Development Kit (SDK) that facilitates biometric authentication within the mobile application.
+
+- To implement backend services using Firebase, including authentication, real-time database, cloud functions, and storage, to support data management, processing, and analytics.
+
+- To provide real-time attendance tracking, reporting, and user management features that enable stakeholders to monitor attendance patterns and generate comprehensive reports.
+
+- To ensure data security and privacy compliance by implementing appropriate authentication mechanisms, data encryption, and access controls within the system.
+
+- To evaluate the system’s performance, usability, and effectiveness through rigorous testing and user feedback.
+
+1.4.3 Research Questions
+
+- How can fingerprint biometric technology be effectively integrated into attendance management systems to enhance accuracy and security?
+
+- What are the challenges and solutions in developing a multi-role Management Information System tailored for educational institutions?
+
+- How does the proposed system compare to traditional attendance methods in terms of reliability, efficiency, and user satisfaction?
+
+- What are the best practices for ensuring data privacy and security in biometric attendance systems?
+
+- How can real-time data analytics and reporting improve administrative decision-making in educational settings?
+
+These objectives and research questions provide a structured framework for the study, guiding the design, implementation, and evaluation phases to ensure the development of a robust and user-centric attendance management solution.

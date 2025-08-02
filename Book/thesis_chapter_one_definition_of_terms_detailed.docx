@@ -1,0 +1,35 @@
+1.7 Definition of Terms
+
+To ensure clarity and a common understanding throughout this study, the following key terms are defined as they pertain to the Fingerprint-Based Attendance and Management Information System (MIS):
+
+1.7.1 Attendance Management System  
+A system designed to record, track, and manage the presence of individuals in a specific setting, such as educational institutions, to ensure accurate and reliable attendance data.
+
+1.7.2 Biometric Authentication  
+A security process that uses unique biological characteristics, such as fingerprints, facial recognition, or iris patterns, to verify the identity of an individual.
+
+1.7.3 Fingerprint Recognition  
+A biometric technique that identifies and verifies individuals based on the unique patterns of ridges and valleys on their fingertips.
+
+1.7.4 Management Information System (MIS)  
+An integrated set of components for collecting, storing, and processing data to provide information, support decision-making, and facilitate management functions within an organization.
+
+1.7.5 Flutter  
+An open-source UI software development kit created by Google for building natively compiled applications for mobile, web, and desktop from a single codebase.
+
+1.7.6 Firebase  
+A platform developed by Google that provides a suite of cloud services including real-time databases, authentication, cloud functions, and storage, used for building and managing applications.
+
+1.7.7 Proxy Attendance  
+A fraudulent practice where an individual marks attendance on behalf of another person who is absent.
+
+1.7.8 Cross-Platform Application  
+An application designed to run on multiple operating systems or devices with minimal modification to the source code.
+
+1.7.9 Software Development Kit (SDK)  
+A collection of software tools, libraries, and documentation that developers use to create applications for specific platforms or devices.
+
+1.7.10 Real-Time Data  
+Information that is delivered immediately after collection without delay, enabling timely decision-making and responses.
+
+These definitions provide foundational understanding for the concepts and technologies discussed in this study, facilitating effective communication and comprehension.

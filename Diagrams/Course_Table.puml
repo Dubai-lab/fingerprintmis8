@@ -1,0 +1,37 @@
+@startuml
+' Course Table Structure
+
+skinparam entity {
+  BackgroundColor #f06292
+  BorderColor black
+  FontColor black
+}
+
+entity "Course" as Course {
+  + courseId : String [PK]
+  --
+  courseName : String
+  description : String
+  instructorId : String [FK]
+  department : String
+  startDate : Date
+  endDate : Date
+  createdAt : DateTime
+}
+
+note right of Course
+  **Course Table**
+  Stores information about academic courses.
+  
+  **Columns:**
+  - courseId: Unique identifier for each course (Primary Key)
+  - courseName: Name of the course
+  - description: Detailed description of the course
+  - instructorId: Reference to the instructor teaching the course (Foreign Key)
+  - department: Department offering the course
+  - startDate: Course start date
+  - endDate: Course end date
+  - createdAt: Timestamp when the course was created
+end note
+
+@enduml

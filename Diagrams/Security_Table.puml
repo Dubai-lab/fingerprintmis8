@@ -1,0 +1,33 @@
+@startuml
+' Security Table Structure
+
+skinparam entity {
+  BackgroundColor #f06292
+  BorderColor black
+  FontColor black
+}
+
+entity "Security" as Security {
+  + securityID : String [PK]
+  --
+  userID : String [FK]
+  assignedArea : String
+  shiftSchedule : String
+  clearanceLevel : String
+  trainingCompleted : String
+}
+
+note right of Security
+  **Security Table**
+  Stores specific information for security users.
+  
+  **Columns:**
+  - securityID: Unique identifier for each security personnel (Primary Key)
+  - userID: Reference to the main user record (Foreign Key)
+  - assignedArea: Area/zone assigned for security duties
+  - shiftSchedule: Work shift schedule
+  - clearanceLevel: Security clearance level
+  - trainingCompleted: List of completed security training programs
+end note
+
+@enduml

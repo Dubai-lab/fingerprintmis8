@@ -177,6 +177,12 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
       appBar: AppBar(
         title: Text('Invigilator Attendance Report'),
         backgroundColor: Colors.deepPurple,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/invigilator_dashboard');
+          },
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.download),

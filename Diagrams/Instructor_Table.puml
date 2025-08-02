@@ -1,0 +1,33 @@
+@startuml
+' Instructor Table Structure
+
+skinparam entity {
+  BackgroundColor #f06292
+  BorderColor black
+  FontColor black
+}
+
+entity "Instructor" as Instructor {
+  + instructorID : String [PK]
+  --
+  userID : String [FK]
+  department : String
+  specialization : String
+  officeLocation : String
+  officeHours : String
+}
+
+note right of Instructor
+  **Instructor Table**
+  Stores specific information for instructor users.
+  
+  **Columns:**
+  - instructorID: Unique identifier for each instructor (Primary Key)
+  - userID: Reference to the main user record (Foreign Key)
+  - department: Department the instructor belongs to
+  - specialization: Academic specialization/subject area
+  - officeLocation: Physical office location
+  - officeHours: Scheduled office hours
+end note
+
+@enduml

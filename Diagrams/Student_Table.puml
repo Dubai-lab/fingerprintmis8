@@ -1,0 +1,35 @@
+@startuml
+' Student Table Structure
+
+skinparam entity {
+  BackgroundColor #f06292
+  BorderColor black
+  FontColor black
+}
+
+entity "Student" as Student {
+  + studentID : String [PK]
+  --
+  userID : String [FK]
+  studentNumber : String
+  program : String
+  yearLevel : String
+  enrollmentDate : Date
+  academicAdvisor : String
+}
+
+note right of Student
+  **Student Table**
+  Stores specific information for student users.
+  
+  **Columns:**
+  - studentID: Unique identifier for each student (Primary Key)
+  - userID: Reference to the main user record (Foreign Key)
+  - studentNumber: Official student identification number
+  - program: Academic program/course of study
+  - yearLevel: Current academic year level
+  - enrollmentDate: Date of initial enrollment
+  - academicAdvisor: Assigned academic advisor
+end note
+
+@enduml

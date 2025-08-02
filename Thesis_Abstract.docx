@@ -1,9 +1,0 @@
-FingerprintMIS8 is a comprehensive mobile application designed to streamline and enhance the management of attendance using fingerprint biometric technology. This system addresses the challenges faced by educational institutions in maintaining accurate and reliable attendance records, reducing manual errors, and preventing fraudulent attendance marking. The application integrates fingerprint enrollment and verification with course and user management, providing a secure and efficient solution for administrators, instructors, invigilators, security personnel, and students.
-
-The core functionality of FingerprintMIS8 revolves around the use of fingerprint biometrics to authenticate users and mark attendance in real-time. The system leverages Firebase as its backend for data storage and synchronization, ensuring scalability and reliability. The application is developed using Flutter, enabling cross-platform compatibility and a responsive user interface adaptable to various Android devices.
-
-This thesis presents the design, implementation, and evaluation of the FingerprintMIS8 system. It includes detailed analysis of system requirements, architectural design supported by entity-relationship diagrams, data flow diagrams, and use case diagrams. The implementation section covers the integration of fingerprint SDKs, Firebase services, and the development of key modules such as user registration, course management, attendance tracking, and reporting.
-
-Testing and evaluation demonstrate the system's effectiveness in improving attendance accuracy and operational efficiency. The thesis concludes with discussions on the system's limitations, potential enhancements, and future research directions in biometric attendance systems.
-
-Overall, FingerprintMIS8 offers a robust and user-friendly platform that modernizes attendance management, contributing to improved academic administration and security in educational environments.

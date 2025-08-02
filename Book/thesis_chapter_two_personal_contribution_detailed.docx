@@ -1,0 +1,17 @@
+2.5 Personal Contribution
+
+This study contributes to the field of attendance management systems by developing a Fingerprint-Based Attendance and Management Information System (MIS) that integrates biometric authentication with a comprehensive management platform. The personal contributions of this research include:
+
+- Designing and implementing a cross-platform mobile application using Flutter, enabling accessibility across multiple devices and operating systems.
+
+- Developing a custom fingerprint SDK to facilitate reliable and secure biometric enrollment and verification, addressing hardware compatibility challenges.
+
+- Integrating Firebase services to provide real-time data synchronization, user authentication, cloud functions, and analytics, enhancing system scalability and maintainability.
+
+- Conducting a thorough comparative analysis of existing attendance systems to identify gaps and inform the design of the proposed solution.
+
+- Implementing robust security measures to protect user data and ensure compliance with privacy standards.
+
+- Evaluating the system’s performance and usability through comprehensive testing and user feedback, demonstrating its effectiveness in reducing proxy attendance and improving administrative efficiency.
+
+These contributions advance the application of biometric technologies in attendance management and provide a practical solution tailored to the needs of educational institutions.

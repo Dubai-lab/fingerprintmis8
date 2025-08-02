@@ -169,17 +169,25 @@ class _InstructorDashboardPageState extends State<InstructorDashboardPage> {
                 Navigator.pushNamed(context, '/history');
               },
             ),
-                  ListTile(
-                    leading: Icon(Icons.settings, color: Colors.deepPurple),
-                    title: Text('Settings', style: TextStyle(fontSize: 18)),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => InstructorSettingsPage()),
-                      );
-                    },
-                  ),
+            ListTile(
+              leading: Icon(Icons.settings, color: Colors.deepPurple),
+              title: Text('Settings', style: TextStyle(fontSize: 18)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => InstructorSettingsPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.person, color: Colors.deepPurple),
+              title: Text('Profile', style: TextStyle(fontSize: 18)),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/user_profile');
+              },
+            ),
                 ],
               ),
             ),
