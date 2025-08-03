@@ -25,6 +25,8 @@ import 'manage_courses_page.dart';
 import 'history_page.dart';
 import 'joined_students_page.dart';
 import 'user_profile_page.dart';
+import 'settings_page.dart';
+import 'change_user_password_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,6 +74,8 @@ class MyApp extends StatelessWidget {
         '/history': (context) => const HistoryPage(),
         '/joined_students': (context) => const JoinedStudentsPage(),
         '/user_profile': (context) => const UserProfilePage(),
+        '/settings': (context) => const SettingsPage(),
+        '/change_user_password': (context) => ChangeUserPasswordPage(),
       },
     );
   }

@@ -1,0 +1,49 @@
+@startuml
+title FingerprintMIS8 - Level 0 DFD (User Project)
+
+skinparam rectangle {
+  BackgroundColor #f06292
+  BorderColor black
+  RoundCorner 15
+  FontColor black
+}
+
+skinparam actor {
+  BackgroundColor #4db6ac
+  BorderColor black
+  FontColor black
+}
+
+actor "Admin" as Admin #4db6ac
+actor "Instructor" as Instructor #4db6ac
+actor "Invigilator" as Invigilator #4db6ac
+actor "Security" as Security #4db6ac
+
+actor "Users" as Users #4db6ac
+
+rectangle "1.0 User Management" as UserManagement #f06292
+rectangle "2.0 Course Enrollment" as CourseEnrollment #f06292
+rectangle "3.0 Attendance Management" as AttendanceManagement #f06292
+rectangle "4.0 Data Management" as DataManagement #f06292
+rectangle "5.0 Report Management" as ReportManagement #f06292
+
+Admin -[#0000FF]-> UserManagement : Create User Accounts\nManage Users
+Instructor -[#0000FF]-> CourseEnrollment : Register Courses\nEnroll Students
+Invigilator -[#0000FF]-> AttendanceManagement : Record Attendance\nVerify Attendance
+Security -[#0000FF]-> UserManagement : Authentication Data\nVerify Identity
+
+Users -[#0000FF]-> UserManagement : Authentication Requests\nUser Data
+Users -[#0000FF]-> CourseEnrollment : Course Enrollment Requests
+Users -[#0000FF]-> AttendanceManagement : Attendance Data
+
+UserManagement -[#0000FF]-> CourseEnrollment : Registered User Data
+CourseEnrollment -[#0000FF]-> AttendanceManagement : Enrollment Data
+AttendanceManagement -[#0000FF]-> DataManagement : Attendance Records
+DataManagement -[#0000FF]-> ReportManagement : Data for Reports
+
+ReportManagement -[#0000FF]-> Admin : Generated Reports
+ReportManagement -[#0000FF]-> Instructor : Attendance Reports
+ReportManagement -[#0000FF]-> Invigilator : Exam Reports
+ReportManagement -[#0000FF]-> Security : Verification Reports
+
+@enduml

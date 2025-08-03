@@ -1,0 +1,51 @@
+@startuml
+title FingerprintMIS8 - Level 1 DFD (Report Management)
+
+skinparam rectangle {
+  BackgroundColor #f06292
+  BorderColor black
+  RoundCorner 15
+  FontColor black
+}
+
+skinparam actor {
+  BackgroundColor #4db6ac
+  BorderColor black
+  FontColor black
+}
+
+actor "Admin" as Admin #4db6ac
+actor "Instructor" as Instructor #4db6ac
+actor "Invigilator" as Invigilator #4db6ac
+actor "Security" as Security #4db6ac
+
+rectangle "5.1 Generate Course Reports" as GenerateCourseReports #f06292
+rectangle "5.2 Generate Student Reports" as GenerateStudentReports #f06292
+rectangle "5.3 Generate Attendance Reports" as GenerateAttendanceReports #f06292
+rectangle "5.4 Export Reports" as ExportReports #f06292
+
+database "D4: Students" as D4 #ffccff
+database "D6: Courses" as D6 #ffccff
+database "D7: Attendance" as D7 #ffccff
+database "D8: Attendance_Log" as D8 #ffccff
+
+Admin -[#0000FF]-> GenerateCourseReports : Report Requests
+Instructor -[#0000FF]-> GenerateCourseReports : Report Requests
+GenerateCourseReports -[#0000FF]-> D6 : Retrieve Course Data
+
+Admin -[#0000FF]-> GenerateStudentReports : Report Requests
+Instructor -[#0000FF]-> GenerateStudentReports : Report Requests
+GenerateStudentReports -[#0000FF]-> D4 : Retrieve Student Data
+
+Admin -[#0000FF]-> GenerateAttendanceReports : Report Requests
+Instructor -[#0000FF]-> GenerateAttendanceReports : Report Requests
+Invigilator -[#0000FF]-> GenerateAttendanceReports : Report Requests
+GenerateAttendanceReports -[#0000FF]-> D7 : Retrieve Attendance Data
+GenerateAttendanceReports -[#0000FF]-> D8 : Retrieve Attendance Logs
+
+Admin -[#0000FF]-> ExportReports : Export Requests
+Instructor -[#0000FF]-> ExportReports : Export Requests
+Invigilator -[#0000FF]-> ExportReports : Export Requests
+Security -[#0000FF]-> ExportReports : Export Requests
+
+@enduml

@@ -52,6 +52,56 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
           ),
         ],
       ),
+      drawer: Drawer(
+        child: Column(
+          children: <Widget>[
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  DrawerHeader(
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple,
+                    ),
+                    child: Text(
+                      'Security Menu',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.verified_user, color: Colors.deepPurple),
+                    title: Text('Security Verification'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/security_verification');
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.settings, color: Colors.deepPurple),
+                    title: Text('Settings'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/settings');
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text('Logout'),
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacementNamed(context, '/login');
+              },
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           if (_showChangePasswordPrompt)

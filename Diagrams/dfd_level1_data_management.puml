@@ -1,0 +1,40 @@
+@startuml
+title FingerprintMIS8 - Level 1 DFD (Data Management)
+
+skinparam rectangle {
+  BackgroundColor #f06292
+  BorderColor black
+  RoundCorner 15
+  FontColor black
+}
+
+skinparam actor {
+  BackgroundColor #4db6ac
+  BorderColor black
+  FontColor black
+}
+
+actor "Admin" as Admin #4db6ac
+actor "Instructor" as Instructor #4db6ac
+actor "Users" as Users #4db6ac
+
+rectangle "4.1 Manage Student Details" as ManageStudents #f06292
+rectangle "4.2 Manage Attendance Data" as ManageAttendanceData #f06292
+rectangle "4.3 Update Enrollment" as UpdateEnrollment #f06292
+
+database "D4: Students" as D4 #ffccff
+database "D5: Student_Course" as D5 #ffccff
+database "D7: Attendance" as D7 #ffccff
+
+Admin -[#0000FF]-> ManageStudents : Student Data Updates
+ManageStudents -[#0000FF]-> D4 : Update Student Records
+
+Instructor -[#0000FF]-> ManageAttendanceData : Attendance Data Updates
+ManageAttendanceData -[#0000FF]-> D7 : Update Attendance Records
+
+Instructor -[#0000FF]-> UpdateEnrollment : Enrollment Updates
+UpdateEnrollment -[#0000FF]-> D5 : Update Enrollment Records
+
+Users -[#0000FF]-> ManageStudents : Profile Updates
+
+@enduml

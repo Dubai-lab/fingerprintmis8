@@ -1,0 +1,53 @@
+@startuml
+title FingerprintMIS8 - Level 1 DFD (User Management)
+
+skinparam rectangle {
+  BackgroundColor #f06292
+  BorderColor black
+  RoundCorner 15
+  FontColor black
+}
+
+skinparam actor {
+  BackgroundColor #4db6ac
+  BorderColor black
+  FontColor black
+}
+
+actor "Admin" as Admin #4db6ac
+actor "Security" as Security #4db6ac
+actor "Users" as Users #4db6ac
+
+rectangle "1.1 Create User Account" as CreateUser #f06292
+rectangle "1.2 Authenticate User" as AuthenticateUser #f06292
+rectangle "1.3 Update User Details" as UpdateUser #f06292
+rectangle "1.4 Delete User Account" as DeleteUser #f06292
+
+database "D1: Users" as D1 #ffccff
+database "D2: Instructors" as D2 #ffccff
+database "D3: Invigilators" as D3 #ffccff
+database "D4: Students" as D4 #ffccff
+
+Admin -[#0000FF]-> CreateUser : User Details\nRole Assignment
+CreateUser -[#0000FF]-> D1 : Store User Data
+CreateUser -[#0000FF]-> D2 : Store Instructor Data
+CreateUser -[#0000FF]-> D3 : Store Invigilator Data
+CreateUser -[#0000FF]-> D4 : Store Student Data
+
+Users -[#0000FF]-> AuthenticateUser : Login Credentials
+AuthenticateUser -[#0000FF]-> D1 : Verify User Data
+AuthenticateUser -[#0000FF]-> Security : Authentication Result
+
+Users -[#0000FF]-> UpdateUser : Updated User Info
+UpdateUser -[#0000FF]-> D1 : Update User Data
+UpdateUser -[#0000FF]-> D2 : Update Instructor Data
+UpdateUser -[#0000FF]-> D3 : Update Invigilator Data
+UpdateUser -[#0000FF]-> D4 : Update Student Data
+
+Admin -[#0000FF]-> DeleteUser : User ID
+DeleteUser -[#0000FF]-> D1 : Remove User Data
+DeleteUser -[#0000FF]-> D2 : Remove Instructor Data
+DeleteUser -[#0000FF]-> D3 : Remove Invigilator Data
+DeleteUser -[#0000FF]-> D4 : Remove Student Data
+
+@enduml

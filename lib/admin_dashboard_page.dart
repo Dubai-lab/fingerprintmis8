@@ -257,6 +257,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 );
               },
             ),
+            ListTile(
+  leading: Icon(Icons.settings, color: Colors.deepPurple),
+  title: Text('Settings'),
+  onTap: () {
+    Navigator.pop(context);
+    Navigator.pushNamed(context, '/settings');
+  },
+),
+
                 ],
               ),
             ),

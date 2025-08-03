@@ -8,7 +8,7 @@ class UserManagementPage extends StatefulWidget {
   _UserManagementPageState createState() => _UserManagementPageState();
 }
 
-enum UserType { all, students, instructors, invigilators, admins }
+enum UserType { all, students, instructors, invigilators, admins, security }
 
 class _UserManagementPageState extends State<UserManagementPage> {
   List<Map<String, dynamic>> _allUsers = [];
@@ -76,6 +76,17 @@ class _UserManagementPageState extends State<UserManagementPage> {
           'type': UserType.admins,
         };
       }));
+
+      // Fetch security
+      final securitySnapshot = await FirebaseFirestore.instance.collection('security').get();
+      users.addAll(securitySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'name': data['name'] ?? '',
+          'type': UserType.security,
+        };
+      }));
     } catch (e) {
       print('Error fetching users: $e');
     }
@@ -124,22 +135,25 @@ class _UserManagementPageState extends State<UserManagementPage> {
           title: Text(user['name'] ?? ''),
           subtitle: user['regNumber'] != null && user['regNumber'].isNotEmpty ? Text('Reg#: ${user['regNumber']}') : null,
           leading: Icon(Icons.person),
-          trailing: PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'view') {
-                _viewUserDetails(user);
-              } else if (value == 'edit') {
-                _editUser(user);
-              } else if (value == 'delete') {
-                _deleteUser(user);
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(value: 'view', child: Text('View Details')),
-              PopupMenuItem(value: 'edit', child: Text('Edit')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
-            ],
-          ),
+              trailing: PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'view') {
+                    _viewUserDetails(user);
+                  } else if (value == 'edit') {
+                    _editUser(user);
+                  } else if (value == 'delete') {
+                    _deleteUser(user);
+                  } else if (value == 'reset_password') {
+                    _resetUserPassword(user);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(value: 'view', child: Text('View Details')),
+                  PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  PopupMenuItem(value: 'reset_password', child: Text('Reset Password')),
+                  PopupMenuItem(value: 'delete', child: Text('Delete')),
+                ],
+              ),
           onTap: () {
             // Optionally handle user tap
           },
@@ -280,6 +294,49 @@ class _UserManagementPageState extends State<UserManagementPage> {
     }
   }
 
+  Future<void> _resetUserPassword(Map<String, dynamic> user) async {
+    bool confirmed = false;
+    confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('Reset User Password'),
+              content: Text('Are you sure you want to reset the password for ${user['name']}?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text('Reset Password'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (confirmed) {
+      try {
+        String collectionName = _getCollectionName(user['type']);
+        // Update the user document to mark them as using a default password
+        await FirebaseFirestore.instance.collection(collectionName).doc(user['id']).update({
+          'defaultPassword': true,
+          'passwordSetTime': DateTime.now().toIso8601String(),
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Password reset for ${user['name']}. Please notify them to check their email for the default password.')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to reset password: $e')),
+        );
+      }
+    }
+  }
+
   String _getCollectionName(UserType type) {
     switch (type) {
       case UserType.students:
@@ -290,6 +347,8 @@ class _UserManagementPageState extends State<UserManagementPage> {
         return 'invigilators';
       case UserType.admins:
         return 'admins';
+      case UserType.security:
+        return 'security';
       default:
         return '';
     }
@@ -301,6 +360,10 @@ class _UserManagementPageState extends State<UserManagementPage> {
       appBar: AppBar(
         backgroundColor: Colors.deepPurple.shade600,
         elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pushReplacementNamed(context, '/admin_dashboard'),
+        ),
         title: Text(
           'User Management',
           style: TextStyle(
@@ -351,6 +414,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
                         DropdownMenuItem(value: UserType.instructors, child: Text('Instructors')),
                         DropdownMenuItem(value: UserType.invigilators, child: Text('Invigilators')),
                         DropdownMenuItem(value: UserType.admins, child: Text('Admins')),
+                        DropdownMenuItem(value: UserType.security, child: Text('Security')),
                       ],
                       onChanged: (value) {
                         if (value != null) {

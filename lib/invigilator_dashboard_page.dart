@@ -82,6 +82,14 @@ class _InvigilatorDashboardPageState extends State<InvigilatorDashboardPage> {
                       Navigator.pushNamed(context, '/invigilator_attendance_report');
                     },
                   ),
+                  ListTile(
+                    leading: Icon(Icons.settings, color: Colors.deepPurple),
+                    title: Text('Settings'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/settings');
+                    },
+                  ),
                 ],
               ),
             ),

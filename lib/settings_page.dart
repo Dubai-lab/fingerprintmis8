@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'change_user_password_page.dart';
 
-class InstructorSettingsPage extends StatefulWidget {
-  const InstructorSettingsPage({Key? key}) : super(key: key);
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({Key? key}) : super(key: key);
 
   @override
-  _InstructorSettingsPageState createState() => _InstructorSettingsPageState();
+  _SettingsPageState createState() => _SettingsPageState();
 }
 
-class _InstructorSettingsPageState extends State<InstructorSettingsPage> {
+class _SettingsPageState extends State<SettingsPage> {
   bool _notificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Instructor Settings'),
+        title: Text('Settings'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -29,12 +30,14 @@ class _InstructorSettingsPageState extends State<InstructorSettingsPage> {
                 });
               },
             ),
-            Divider(),
             ListTile(
+              leading: Icon(Icons.lock, color: Colors.deepPurple),
               title: Text('Change Password'),
-              trailing: Icon(Icons.chevron_right),
               onTap: () {
-                Navigator.pushNamed(context, '/change-password');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChangeUserPasswordPage()),
+                );
               },
             ),
           ],
