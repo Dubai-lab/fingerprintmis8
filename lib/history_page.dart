@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'attendance_report_page.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({Key? key}) : super(key: key);
@@ -89,6 +90,15 @@ class _HistoryPageState extends State<HistoryPage> {
                               Text('End Date: ${_formatDate(course['endDate'])}'),
                             ],
                           ),
+                          onTap: () {
+                            // Navigate to attendance report for this course
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AttendanceReportPage(courseId: course['id'], courseName: course['courseName']),
+                              ),
+                            );
+                          },
                         ),
                       );
                     },

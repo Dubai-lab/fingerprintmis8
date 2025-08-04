@@ -23,6 +23,7 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
 
   String? _selectedActivity;
   String? _selectedCourseId;
+  DateTime? _selectedConferenceDate;
 
   List<String> _activities = ['CAT', 'EXAM', 'CONFERENCE'];
   List<Map<String, dynamic>> _courses = [];
@@ -251,6 +252,8 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
           'status': 'Present',
           'activity': _selectedActivity,
           'courseId': _selectedActivity == 'CONFERENCE' ? null : _selectedCourseId,
+          if (_selectedActivity == 'CONFERENCE' && _selectedConferenceDate != null)
+            'conferenceDate': _selectedConferenceDate,
         });
 
         setState(() {
@@ -330,6 +333,43 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
               },
             ),
             SizedBox(height: 20),
+            if (_selectedActivity == 'CONFERENCE')
+              Column(
+                children: [
+                  TextButton(
+                    onPressed: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                      );
+                      if (pickedDate != null) {
+                        setState(() {
+                          _selectedConferenceDate = pickedDate;
+                        });
+                      }
+                    },
+                    child: Text(
+                      _selectedConferenceDate == null
+                          ? 'Select Conference Date'
+                          : 'Conference Date: ${_selectedConferenceDate!.year}-${_selectedConferenceDate!.month.toString().padLeft(2, '0')}-${_selectedConferenceDate!.day.toString().padLeft(2, '0')}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _selectedConferenceDate == null ? Colors.deepPurple : Colors.black,
+                      ),
+                    ),
+                  ),
+                  if (_selectedConferenceDate == null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        'Please select a conference date',
+                        style: TextStyle(color: Colors.red, fontSize: 14),
+                      ),
+                    ),
+                ],
+              ),
             if (_selectedActivity != 'CONFERENCE')
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(
@@ -387,7 +427,7 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: _scanning ? null : _startScanning,
+              onPressed: _scanning || (_selectedActivity == 'CONFERENCE' && _selectedConferenceDate == null) ? null : _startScanning,
               child: Text(
                 _scanning ? 'Scanning...' : 'Start Scanning',
                 style: TextStyle(fontSize: 18),

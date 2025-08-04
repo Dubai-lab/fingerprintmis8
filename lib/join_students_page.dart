@@ -61,7 +61,13 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
               stream: _firestore.collection('instructor_courses').orderBy('createdAt', descending: true).snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return Center(child: CircularProgressIndicator());
-                final courses = snapshot.data!.docs;
+                final now = DateTime.now();
+                final courses = snapshot.data!.docs.where((course) {
+                  final endDate = course['endDate'] as Timestamp?;
+                  // If endDate is null, we'll still show the course
+                  // Otherwise, only show if endDate is in the future
+                  return endDate == null || endDate.toDate().isAfter(now);
+                }).toList();
                 return DropdownButtonFormField<String>(
                   decoration: InputDecoration(
                     labelText: 'Select Course',
@@ -130,7 +136,9 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
                       }).toList();
 
                       // Filter students by selected course's department
-                      if (_selectedCourseId != null && _courseDepartment != null) {
+                      // If course department is "General", show all students
+                      // Otherwise, filter by department
+                      if (_selectedCourseId != null && _courseDepartment != null && _courseDepartment != 'General') {
                         students.retainWhere((student) {
                           final studentDept = student['department'] ?? '';
                           return studentDept == _courseDepartment;

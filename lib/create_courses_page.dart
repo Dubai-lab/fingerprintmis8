@@ -17,15 +17,36 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
   String _selectedSession = 'Day';
   String? _selectedInstructorId;
   List<Map<String, dynamic>> _instructors = [];
-  final TextEditingController _departmentController = TextEditingController();
+  List<String> _departments = [];
+  String? _selectedDepartment;
 
   DateTime? _startDate;
   DateTime? _endDate;
+
+  Future<void> _loadDepartments() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance.collection('students').get();
+      final departments = querySnapshot.docs
+          .map((doc) => doc.data()['department'] as String?)
+          .whereType<String>()
+          .toSet()
+          .toList();
+      departments.sort(); // Sort alphabetically
+      setState(() {
+        _departments = departments;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load departments: $e')),
+      );
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _loadInstructors();
+    _loadDepartments();
   }
 
   Future<void> _loadInstructors() async {
@@ -52,7 +73,7 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
 
   Future<void> _addCourse() async {
     final courseName = _courseNameController.text.trim();
-    if (courseName.isEmpty || _selectedInstructorId == null || _startDate == null || _endDate == null || _departmentController.text.trim().isEmpty) {
+    if (courseName.isEmpty || _selectedInstructorId == null || _startDate == null || _endDate == null || _selectedDepartment == null || _selectedDepartment!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please fill all required fields')),
       );
@@ -74,7 +95,7 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
         'session': _selectedSession,
         'startDate': _startDate,
         'endDate': _endDate,
-        'department': _departmentController.text.trim(),
+        'department': _selectedDepartment,
         'createdAt': FieldValue.serverTimestamp(),
       });
       _courseNameController.clear();
@@ -82,7 +103,7 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
         _selectedSession = 'Day';
         _startDate = null;
         _endDate = null;
-        _departmentController.clear();
+        _selectedDepartment = null;
         if (_instructors.isNotEmpty) {
           _selectedInstructorId = _instructors[0]['id'];
         }
@@ -187,8 +208,8 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
                       },
                     ),
                     SizedBox(height: 16),
-                    TextFormField(
-                      controller: _departmentController,
+                    DropdownButtonFormField<String>(
+                      value: _selectedDepartment,
                       decoration: InputDecoration(
                         labelText: 'Department',
                         border: OutlineInputBorder(
@@ -196,8 +217,19 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
                         ),
                         prefixIcon: Icon(Icons.school, color: Colors.deepPurple),
                       ),
+                      items: ['General', ..._departments]
+                          .map((department) => DropdownMenuItem(
+                                value: department,
+                                child: Text(department),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedDepartment = value;
+                        });
+                      },
                       validator: (value) =>
-                          value == null || value.isEmpty ? 'Enter department' : null,
+                          value == null || value.isEmpty ? 'Select a department' : null,
                     ),
                     SizedBox(height: 16),
                     Row(

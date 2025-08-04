@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fingerprintmis8/admin_attendance_reports_page.dart';
 import 'package:fingerprintmis8/admin_registration_page.dart';
 import 'package:fingerprintmis8/join_students_page.dart';
 import 'package:fingerprintmis8/joined_students_page.dart';
@@ -258,13 +259,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               },
             ),
             ListTile(
-  leading: Icon(Icons.settings, color: Colors.deepPurple),
-  title: Text('Settings'),
-  onTap: () {
-    Navigator.pop(context);
-    Navigator.pushNamed(context, '/settings');
-  },
-),
+              leading: Icon(Icons.assessment, color: Colors.deepPurple),
+              title: Text('CAT & EXAM Reports'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminAttendanceReportsPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.settings, color: Colors.deepPurple),
+              title: Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
 
                 ],
               ),

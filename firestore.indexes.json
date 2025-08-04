@@ -43,6 +43,20 @@
       ]
     },
     {
+      "collectionGroup": "attendance",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        {
+          "fieldPath": "conferenceDate",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "instructor_courses",
       "queryScope": "COLLECTION",
       "fields": [

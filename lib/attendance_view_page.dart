@@ -46,13 +46,22 @@ class _AttendanceViewPageState extends State<AttendanceViewPage> {
     });
 
     try {
+      final now = DateTime.now();
       final querySnapshot = await FirebaseFirestore.instance
           .collection('instructor_courses')
           .where('instructorId', isEqualTo: userId)
           .get();
 
+      final validCourses = querySnapshot.docs.where((doc) {
+        final data = doc.data();
+        final endDate = data['endDate'] as Timestamp?;
+        // If endDate is null, we'll still show the course
+        // Otherwise, only show if endDate is in the future
+        return endDate == null || endDate.toDate().isAfter(now);
+      }).toList();
+
       setState(() {
-        _courses = querySnapshot.docs.map((doc) {
+        _courses = validCourses.map((doc) {
           final data = doc.data();
           return {
             'id': doc.id,

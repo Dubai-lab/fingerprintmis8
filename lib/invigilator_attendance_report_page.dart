@@ -32,9 +32,19 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
 
   Future<void> _loadCourses() async {
     try {
+      final now = DateTime.now();
       final querySnapshot = await FirebaseFirestore.instance.collection('instructor_courses').get();
+      
+      final validCourses = querySnapshot.docs.where((doc) {
+        final data = doc.data();
+        final endDate = data['endDate'] as Timestamp?;
+        // If endDate is null, we'll still show the course
+        // Otherwise, only show if endDate is in the future
+        return endDate == null || endDate.toDate().isAfter(now);
+      }).toList();
+
       setState(() {
-        _courses = querySnapshot.docs.map((doc) {
+        _courses = validCourses.map((doc) {
           final data = doc.data();
           return {
             'id': doc.id,
@@ -220,29 +230,28 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
                 _fetchAttendanceRecords();
               },
             ),
-            SizedBox(height: 16),
-            if (_selectedActivity == 'CAT' || _selectedActivity == 'EXAM')
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Select Course',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-                value: _selectedCourseId,
-                items: _courses.map((course) {
-                  return DropdownMenuItem<String>(
-                    value: course['id'],
-                    child: Text(course['name']),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCourseId = value;
-                  });
-                  _fetchAttendanceRecords();
-                },
-              ),
-            SizedBox(height: 16),
+      if (_selectedActivity == 'CAT' || _selectedActivity == 'EXAM')
+        DropdownButtonFormField<String>(
+          decoration: InputDecoration(
+            labelText: 'Select Course',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+          value: _selectedCourseId,
+          items: _courses.map((course) {
+            return DropdownMenuItem<String>(
+              value: course['id'],
+              child: Text(course['name']),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedCourseId = value;
+            });
+            _fetchAttendanceRecords();
+          },
+        ),
+      SizedBox(height: 16),
             Expanded(child: _buildAttendanceTable()),
             if (_status.isNotEmpty)
               Padding(
