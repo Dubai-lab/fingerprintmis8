@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "fingerprintmis8"
-  }
+    "default": "fingerprintmis8",
+    "fingerprint8": "fingerprintmis8"
+  },
+  "targets": {},
+  "etags": {}
 }

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,7 +7,8 @@ class SecurityRegistrationPage extends StatefulWidget {
   const SecurityRegistrationPage({Key? key}) : super(key: key);
 
   @override
-  _SecurityRegistrationPageState createState() => _SecurityRegistrationPageState();
+  _SecurityRegistrationPageState createState() =>
+      _SecurityRegistrationPageState();
 }
 
 class _SecurityRegistrationPageState extends State<SecurityRegistrationPage> {
@@ -15,60 +17,76 @@ class _SecurityRegistrationPageState extends State<SecurityRegistrationPage> {
   String _email = '';
   bool _isLoading = false;
 
-  void _submit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
-      setState(() {
-        _isLoading = true;
+  /// Generate a random password
+  String _generatePassword([int length = 12]) {
+    const chars =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$%^&*()';
+    final rand = Random.secure();
+    return List.generate(length, (i) => chars[rand.nextInt(chars.length)]).join();
+  }
+
+  Future<void> _submit() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    _formKey.currentState?.save();
+    setState(() {
+      _isLoading = true;
+    });
+
+    String tempPassword = _generatePassword(12);
+
+    try {
+      // ✅ Create Auth account
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _email,
+        password: tempPassword,
+      );
+
+      final uid = userCredential.user?.uid;
+
+      // ✅ Save to security collection (do not store actual password)
+      await FirebaseFirestore.instance.collection('security').doc(uid).set({
+        'name': _name,
+        'email': _email,
+        'uid': uid,
+        'role': 'security',
+        'defaultPassword': true, // just a flag
+        'passwordSetTime': DateTime.now().toIso8601String(),
+        'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // Generate a default password
-      String password = 'DefaultPass123!'; // You can generate a random password here
+      // ✅ Save to users collection (for Cloud Function to send welcome email)
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'name': _name,
+        'email': _email,
+        'role': 'security',
+        'defaultPassword': tempPassword, // actual temporary password
+        'passwordSetTime': DateTime.now().toIso8601String(),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
-      try {
-        // Create user with email and default password
-        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _email,
-          password: password,
-        );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('✅ Security registered successfully')),
+      );
 
-        // Save additional user info in Firestore
-        await FirebaseFirestore.instance.collection('security').doc(userCredential.user?.uid).set({
-          'name': _name,
-          'email': _email,
-          'uid': userCredential.user?.uid,
-          'defaultPassword': true,
-          'passwordSetTime': DateTime.now().toIso8601String(),
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration successful')),
-        );
-
-        // Show success message only, do not navigate automatically
-        // Removed any login or navigation after registration
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration successful')),
-        );
-      } on FirebaseAuthException catch (e) {
-        String message = 'Registration failed';
-        if (e.code == 'email-already-in-use') {
-          message = 'Email already in use';
-        } else if (e.code == 'weak-password') {
-          message = 'Password is too weak';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred')),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
+      _formKey.currentState?.reset();
+    } on FirebaseAuthException catch (e) {
+      String message = '❌ Registration failed';
+      if (e.code == 'email-already-in-use') {
+        message = 'Email already in use';
+      } else if (e.code == 'weak-password') {
+        message = 'Password is too weak';
       }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ An error occurred: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -99,7 +117,8 @@ class _SecurityRegistrationPageState extends State<SecurityRegistrationPage> {
           child: SingleChildScrollView(
             child: Card(
               elevation: 8,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
               color: Colors.white.withOpacity(0.9),
               child: Padding(
                 padding: EdgeInsets.all(24),
@@ -126,7 +145,8 @@ class _SecurityRegistrationPageState extends State<SecurityRegistrationPage> {
                           prefixIcon: Icon(Icons.person, color: Colors.deepPurple),
                         ),
                         onSaved: (value) => _name = value?.trim() ?? '',
-                        validator: (value) => value == null || value.isEmpty ? 'Please enter your name' : null,
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Please enter your name' : null,
                       ),
                       SizedBox(height: 16),
                       TextFormField(
@@ -140,9 +160,13 @@ class _SecurityRegistrationPageState extends State<SecurityRegistrationPage> {
                         keyboardType: TextInputType.emailAddress,
                         onSaved: (value) => _email = value?.trim() ?? '',
                         validator: (value) {
-                          if (value == null || value.isEmpty) return 'Please enter your email';
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
                           final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                          if (!emailRegex.hasMatch(value)) return 'Enter a valid email';
+                          if (!emailRegex.hasMatch(value)) {
+                            return 'Enter a valid email';
+                          }
                           return null;
                         },
                       ),
@@ -158,7 +182,8 @@ class _SecurityRegistrationPageState extends State<SecurityRegistrationPage> {
                         ),
                         child: _isLoading
                             ? CircularProgressIndicator(color: Colors.white)
-                            : Text('Register', style: TextStyle(fontSize: 18, color: Colors.white)),
+                            : Text('Register',
+                                style: TextStyle(fontSize: 18, color: Colors.white)),
                       ),
                     ],
                   ),

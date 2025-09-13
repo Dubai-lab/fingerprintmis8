@@ -1,0 +1,85 @@
+@startuml
+!theme plain
+title Fingerprint MIS - Level 2 DFD: Fingerprint Processing Process (4.0)
+
+' External entities
+actor Student as "Student"
+actor Instructor as "Instructor"
+actor Security as "Security Personnel"
+
+' Level 2 processes for Fingerprint Processing
+circle "4.1" as P41
+note right of P41 : Fingerprint\nEnrollment Process
+circle "4.2" as P42
+note right of P42 : Template\nGeneration Process
+circle "4.3" as P43
+note right of P43 : Fingerprint\nCapture Process
+circle "4.4" as P44
+note right of P44 : Template\nMatching Process
+circle "4.5" as P45
+note right of P45 : Fingerprint\nVerification Process
+circle "4.6" as P46
+note right of P46 : Device\nManagement Process
+
+' Data stores
+database "D4.1" as D41
+note bottom of D41 : Fingerprint Templates
+database "D4.2" as D42
+note bottom of D42 : Student Enrollment Data
+database "D4.3" as D43
+note bottom of D43 : Fingerprint Images
+database "D4.4" as D44
+note bottom of D44 : Device Status
+database "D4.5" as D45
+note bottom of D45 : Matching Results
+
+' External device
+database "Fingerprint\nDevice" as FDevice
+
+' Student flows
+Student --> P41 : Enrollment Request
+P41 --> Student : Enrollment Status
+Student --> P43 : Fingerprint Placement
+P43 --> Student : Capture Status
+
+' Instructor flows
+Instructor --> P46 : Device Control Commands
+P46 --> Instructor : Device Status
+Instructor --> P44 : Matching Requests
+P44 --> Instructor : Matching Results
+
+' Security flows
+Security --> P45 : Verification Requests
+P45 --> Security : Verification Results
+
+' Process interactions
+P41 --> P43 : Initiate Capture
+P43 --> P42 : Raw Fingerprint Data
+P42 --> P41 : Generated Template
+P43 --> P44 : Captured Template
+P44 --> P45 : Matching Score
+P46 --> P43 : Device Control
+P46 --> P44 : Device Status
+
+' Process to data store flows
+P41 <--> D42 : Student Enrollment Status
+P41 --> D41 : Stored Templates
+
+P42 <--> D43 : Fingerprint Images
+P42 --> D41 : Generated Templates
+
+P43 <--> FDevice : Fingerprint Capture\nImage Data
+P43 --> D43 : Captured Images
+P43 <--> D44 : Device Status
+
+P44 <--> D41 : Template Comparison
+P44 --> D45 : Matching Results
+P44 <--> FDevice : Template Matching
+
+P45 <--> D41 : Template Verification
+P45 <--> D45 : Verification Results
+
+P46 <--> FDevice : Device Control\nStatus Monitoring
+P46 <--> D44 : Device Status Updates
+
+@enduml
