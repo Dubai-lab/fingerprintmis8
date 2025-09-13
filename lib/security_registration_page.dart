@@ -51,7 +51,7 @@ class _SecurityRegistrationPageState extends State<SecurityRegistrationPage> {
         'email': _email,
         'uid': uid,
         'role': 'security',
-        'defaultPassword': true, // just a flag
+        'defaultPassword': tempPassword, // just a flag
         'passwordSetTime': DateTime.now().toIso8601String(),
         'createdAt': FieldValue.serverTimestamp(),
       });

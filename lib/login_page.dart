@@ -27,66 +27,54 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      // Firebase Auth login
       UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // Fetch user role from Firestore
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('instructors').doc(userCredential.user!.uid).get();
-      String? role;
-      bool defaultPassword = false;
-      String? passwordSetTimeStr;
-      if (userDoc.exists) {
-        role = userDoc.get('role');
-        final data = userDoc.data() as Map<String, dynamic>?;
-        defaultPassword = data != null && data.containsKey('defaultPassword') ? data['defaultPassword'] : false;
-        passwordSetTimeStr = data != null && data.containsKey('passwordSetTime') ? data['passwordSetTime'] : null;
-      } else {
-        userDoc = await FirebaseFirestore.instance.collection('invigilators').doc(userCredential.user!.uid).get();
-        if (userDoc.exists) {
-          role = userDoc.get('role');
-          final data = userDoc.data() as Map<String, dynamic>?;
-          defaultPassword = data != null && data.containsKey('defaultPassword') ? data['defaultPassword'] : false;
-          passwordSetTimeStr = data != null && data.containsKey('passwordSetTime') ? data['passwordSetTime'] : null;
-        } else {
-          userDoc = await FirebaseFirestore.instance.collection('admins').doc(userCredential.user!.uid).get();
-          if (userDoc.exists) {
-            role = userDoc.get('role');
-          final data = userDoc.data() as Map<String, dynamic>?;
-          defaultPassword = data != null && data.containsKey('defaultPassword') ? data['defaultPassword'] : false;
-          passwordSetTimeStr = data != null && data.containsKey('passwordSetTime') ? data['passwordSetTime'] : null;
-          } else {
-            userDoc = await FirebaseFirestore.instance.collection('security').doc(userCredential.user!.uid).get();
-            if (userDoc.exists) {
-              role = 'security';
-          final data = userDoc.data() as Map<String, dynamic>?;
-          defaultPassword = data != null && data.containsKey('defaultPassword') ? data['defaultPassword'] : false;
-          passwordSetTimeStr = data != null && data.containsKey('passwordSetTime') ? data['passwordSetTime'] : null;
-            }
-          }
+      final uid = userCredential.user!.uid;
+
+      // Helper to fetch user document from all collections
+      Future<DocumentSnapshot?> getUserDoc() async {
+        final collections = ['instructors', 'invigilators', 'admins', 'security'];
+        for (var col in collections) {
+          final doc = await FirebaseFirestore.instance.collection(col).doc(uid).get();
+          if (doc.exists) return doc;
         }
+        return null;
       }
+
+      final userDoc = await getUserDoc();
+      if (userDoc == null) {
+        setState(() {
+          _status = 'User data not found. Access denied.';
+        });
+        await FirebaseAuth.instance.signOut();
+        return;
+      }
+
+      final data = userDoc.data() as Map<String, dynamic>;
+      final String role = data['role'] ?? '';
+      final bool defaultPasswordFlag = data['defaultPasswordFlag'] ?? false;
+      final String? passwordSetTimeStr = data['passwordSetTime'];
 
       setState(() {
         _status = 'Login successful';
       });
 
-      // Check if user has default password and if 24 hours have passed
-      if (defaultPassword && passwordSetTimeStr != null) {
-        String roleStr = role ?? '';
-        if (roleStr != 'admin') {
-          DateTime passwordSetTime = DateTime.parse(passwordSetTimeStr);
-          DateTime now = DateTime.now();
-          Duration diff = now.difference(passwordSetTime);
-          if (diff.inHours >= 24) {
-            // Redirect to password change page
-            Navigator.pushReplacementNamed(context, '/change-password');
-            return;
-          }
+      // Check default password flag and 24-hour expiry
+      if (defaultPasswordFlag && passwordSetTimeStr != null && role != 'admin') {
+        final DateTime passwordSetTime = DateTime.parse(passwordSetTimeStr);
+        final Duration diff = DateTime.now().difference(passwordSetTime);
+        if (diff.inHours >= 24) {
+          // Redirect to change password page
+          Navigator.pushReplacementNamed(context, '/change-password');
+          return;
         }
       }
 
+      // Redirect based on role
       if (role == 'instructor') {
         Navigator.pushReplacementNamed(context, '/instructor_dashboard');
       } else if (role == 'invigilator') {
@@ -154,10 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Image.asset(
-                              'assets/image/logo.png',
-                              height: 100,
-                            ),
+                            Image.asset('assets/image/logo.png', height: 100),
                             SizedBox(height: 24),
                             TextFormField(
                               controller: _emailController,
@@ -210,7 +195,9 @@ class _LoginPageState extends State<LoginPage> {
                             Text(
                               _status,
                               style: TextStyle(
-                                color: _status.toLowerCase().contains('success') ? Colors.green : Colors.red,
+                                color: _status.toLowerCase().contains('success')
+                                    ? Colors.green
+                                    : Colors.red,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

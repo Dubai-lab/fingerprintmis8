@@ -55,7 +55,7 @@ class _InstructorRegistrationPageState
         'name': name,
         'email': email,
         'role': 'instructor',
-        'defaultPassword': true,
+        'defaultPassword': tempPassword,
         'passwordSetTime': DateTime.now().toIso8601String(),
         'createdAt': FieldValue.serverTimestamp(),
       });

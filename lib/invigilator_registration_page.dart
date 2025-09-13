@@ -56,7 +56,7 @@ class _InvigilatorRegistrationPageState
         'name': name,
         'email': email,
         'role': 'invigilator',
-        'defaultPassword': true, // flag
+        'defaultPassword': tempPassword, // flag
         'passwordSetTime': DateTime.now().toIso8601String(),
         'createdAt': FieldValue.serverTimestamp(),
       });
