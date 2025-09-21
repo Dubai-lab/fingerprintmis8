@@ -141,28 +141,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     },
                   ),
                   ListTile(
-                    leading: Icon(Icons.person_add_alt_1),
-                    title: Text('Instructor Registration'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => InstructorRegistrationPage()),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.person_search),
-                    title: Text('Invigilator Registration'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => InvigilatorRegistrationPage()),
-                      );
-                    },
-                  ),
-                  ListTile(
                     leading: Icon(Icons.person_add_sharp),
                     title: Text('Admin Registration'),
                     onTap: () {
@@ -170,17 +148,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => AdminRegistrationPage()),
-                      );
-                    },
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.security),
-                    title: Text('Security Registration'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SecurityRegistrationPage()),
                       );
                     },
                   ),
@@ -196,6 +163,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       ),
                     ),
                   ),
+                  ListTile(
+              leading: Icon(Icons.person_add, color: Colors.deepPurple),
+              title: Text('Staff Registration'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RegistrationPage()),
+                );
+              },
+            ),
                   ListTile(
                     leading: Icon(Icons.group),
                     title: Text('User Management'),
@@ -267,17 +245,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const AdminAttendanceReportsPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.person_add, color: Colors.deepPurple),
-              title: Text('Unified Registration'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const RegistrationPage()),
                 );
               },
             ),
@@ -362,12 +329,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               icon: Icon(Icons.person_add_alt_1),
                               label: FittedBox(
                                 fit: BoxFit.scaleDown,
-                                child: Text('Register Instructor'),
+                                child: Text('Staff Registration'),
                               ),
                               onPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => InstructorRegistrationPage()),
+                                  MaterialPageRoute(builder: (context) => RegistrationPage()),
                                 );
                               },
                             ),
@@ -430,22 +397,6 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                               ),
                               onPressed: () {
                                 Navigator.pushNamed(context, '/user_management');
-                              },
-                            ),
-                          ),
-                          SizedBox(
-                            width: buttonWidth,
-                            child: ElevatedButton.icon(
-                              icon: Icon(Icons.security),
-                              label: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text('Security Registration'),
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => SecurityRegistrationPage()),
-                                );
                               },
                             ),
                           ),
