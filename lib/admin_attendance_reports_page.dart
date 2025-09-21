@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:csv/csv.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+import 'package:fingerprintmis8/admin/report_page.dart';
 
 class AdminAttendanceReportsPage extends StatefulWidget {
   const AdminAttendanceReportsPage({Key? key}) : super(key: key);
@@ -172,136 +170,13 @@ class _AdminAttendanceReportsPageState extends State<AdminAttendanceReportsPage>
     });
   }
 
-  Future<void> _exportToCSV() async {
-    if (_attendanceReports.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No attendance records to export')),
-      );
-      return;
-    }
 
-    try {
-      List<List<String>> csvData = [
-        ['RegNumber', 'Student Name', 'Date', 'Status', 'Type', 'Course'],
-        ..._attendanceReports.map((record) => [
-              record['regNumber'],
-              record['studentName'],
-              record['timestamp'] != null 
-                  ? DateFormat('yyyy-MM-dd HH:mm').format(record['timestamp']) 
-                  : '',
-              record['status'],
-              record['type'],
-              record['courseName'] ?? '',
-            ]),
-      ];
-
-      String csv = const ListToCsvConverter().convert(csvData);
-
-      final directory = await getApplicationDocumentsDirectory();
-      final path = directory.path.isNotEmpty ? '${directory.path}/admin_attendance_report.csv' : 'admin_attendance_report.csv';
-      final file = File(path);
-
-      await file.writeAsString(csv);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('CSV exported to $path')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error exporting CSV: $e')),
-      );
-    }
-  }
-
-  Widget _buildAttendanceTable() {
-    if (_attendanceReports.isEmpty) {
-      return const Center(child: Text('No attendance records found.'));
-    }
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: const [
-          DataColumn(label: Text('RegNumber')),
-          DataColumn(label: Text('Student Name')),
-          DataColumn(label: Text('Date')),
-          DataColumn(label: Text('Status')),
-          DataColumn(label: Text('Activity')),
-          DataColumn(label: Text('CourseName')),
-        ],
-        rows: _attendanceReports.map((record) {
-          final timestamp = record['timestamp'] as DateTime?;
-          final formattedDate = timestamp != null
-              ? '${timestamp.year}-${timestamp.month.toString().padLeft(2, '0')}-${timestamp.day.toString().padLeft(2, '0')} ${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}'
-              : 'Unknown';
-          return DataRow(cells: [
-            DataCell(Text(record['regNumber'])),
-            DataCell(Text(record['studentName'])),
-            DataCell(Text(formattedDate)),
-            DataCell(Text(record['status'])),
-            DataCell(Text(record['type'])),
-            DataCell(Text(record['courseName'] ?? '')),
-          ]);
-        }).toList(),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('CAT & EXAM Attendance Reports'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.print),
-            onPressed: () async {
-              if (_attendanceReports.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('No attendance records to print')),
-                );
-                return;
-              }
-
-              // Generate CSV content for printing
-              List<List<String>> csvData = [
-                ['RegNumber', 'Student Name', 'Date', 'Status', 'Type', 'Course'],
-                ..._attendanceReports.map((record) => [
-                      record['regNumber'],
-                      record['studentName'],
-                      record['timestamp'] != null
-                          ? DateFormat('yyyy-MM-dd HH:mm').format(record['timestamp'])
-                          : '',
-                      record['status'],
-                      record['type'],
-                      record['courseName'] ?? '',
-                    ]),
-              ];
-
-              String csv = const ListToCsvConverter().convert(csvData);
-
-              // For now, just show the CSV content in a dialog for preview
-              await showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Print Preview (CSV)'),
-                  content: SingleChildScrollView(
-                    child: Text(csv),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Close'),
-                    ),
-                  ],
-                ),
-              );
-
-              // TODO: Integrate with actual print functionality or export to PDF
-            },
-            tooltip: 'Print Report',
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -412,7 +287,22 @@ class _AdminAttendanceReportsPageState extends State<AdminAttendanceReportsPage>
                             title: Text(course['courseName']),
                             subtitle: Text('Code: ${course['courseCode']} | Instructor: ${course['instructorName']}'),
                             trailing: ElevatedButton(
-                              onPressed: () => _loadAttendanceReports(course['id']),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AdminReportPage(
+                                      courseId: course['id'],
+                                      courseName: course['courseName'],
+                                      courseCode: course['courseCode'],
+                                      instructorName: course['instructorName'],
+                                      reportType: _selectedReportType,
+                                      startDate: _startDateController.text,
+                                      endDate: _endDateController.text,
+                                    ),
+                                  ),
+                                );
+                              },
                               child: const Text('View Report'),
                             ),
                           ),
@@ -420,35 +310,6 @@ class _AdminAttendanceReportsPageState extends State<AdminAttendanceReportsPage>
                       },
                     ),
                   ),
-                  // Attendance Reports
-                  if (_attendanceReports.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Attendance Reports',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: _attendanceReports.length,
-                        itemBuilder: (context, index) {
-                          final report = _attendanceReports[index];
-                          return Card(
-                            child: ListTile(
-                              title: Text(report['studentName']),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Reg No: ${report['regNumber']}'),
-                                  Text('Date: ${DateFormat('yyyy-MM-dd').format(report['timestamp'])}'),
-                                  Text('Status: ${report['status']}'),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),

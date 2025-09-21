@@ -14,6 +14,7 @@ import 'package:fingerprintmis8/create_courses_page.dart';
 import 'package:fingerprintmis8/student_verification_page.dart';
 import 'package:fingerprintmis8/security_registration_page.dart';
 import 'admin_dashboard_chart.dart';
+import 'package:fingerprintmis8/auth/registeration_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({Key? key}) : super(key: key);
@@ -266,6 +267,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const AdminAttendanceReportsPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.person_add, color: Colors.deepPurple),
+              title: Text('Unified Registration'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RegistrationPage()),
                 );
               },
             ),
