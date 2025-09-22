@@ -1,9 +1,0 @@
-3.5 Description of the Existing System
-
-The current attendance management system employed by the institution relies primarily on manual record-keeping and traditional methods such as paper registers and sign-in sheets. This system is characterized by several limitations, including susceptibility to human error, time-consuming processes, and vulnerability to proxy attendance.
-
-Some departments have experimented with electronic attendance systems using RFID cards and barcode scanners. While these systems have improved data collection speed, they still face challenges related to security, user authentication, and system integration.
-
-The existing systems lack real-time data synchronization and comprehensive reporting capabilities, leading to delays in attendance tracking and administrative decision-making. Additionally, the absence of biometric verification allows for potential manipulation and inaccuracies in attendance records.
-
-This analysis highlights the need for a more robust, secure, and efficient attendance management system that leverages biometric technology to address the shortcomings of the current methods.

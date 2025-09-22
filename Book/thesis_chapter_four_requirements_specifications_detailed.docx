@@ -1,9 +1,0 @@
-4.3 The Requirements Specifications
-
-4.3.1 Functional Requirements
-
-The system shall provide user authentication through fingerprint biometric verification to ensure secure access. It shall allow users to register, enroll fingerprints, and manage attendance records. The system must support role-based access control for administrators, instructors, students, and security personnel. Real-time attendance tracking and reporting functionalities shall be implemented. The system shall generate attendance reports and analytics for administrative use.
-
-4.3.2 Non-Functional Requirements
-
-The system shall ensure data security and privacy, complying with relevant regulations. It must be scalable to accommodate increasing numbers of users and attendance records. The application shall provide a responsive and intuitive user interface across multiple platforms. System availability and reliability must be maintained with minimal downtime. Performance requirements include fast fingerprint recognition and real-time data synchronization.

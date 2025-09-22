@@ -1,7 +1,0 @@
-2.1 Introduction
-2.2 Definition of Key Terms
-2.3 Existing Technologies in Attendance Systems
-2.4 Comparative Analysis of Attendance Systems
-  2.4.2 Similarities
-  2.4.3 Dissimilarities
-2.5 Personal Contribution

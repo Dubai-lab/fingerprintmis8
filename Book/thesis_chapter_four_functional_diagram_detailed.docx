@@ -1,5 +1,0 @@
-4.4 Functional Diagram
-
-The functional diagram illustrates the major components and interactions within the Fingerprint-Based Attendance and Management System. It highlights the flow of data between users, biometric devices, the mobile application, and the backend services.
-
-Key functions include user registration, fingerprint enrollment, attendance recording, data synchronization with the cloud, report generation, and administrative management. The diagram provides a visual overview of how these components collaborate to achieve the system's objectives.
