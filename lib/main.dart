@@ -5,8 +5,6 @@ import 'admin_dashboard_page.dart';
 import 'student_registration_page.dart';
 import 'fingerprint_enrollment_page.dart';
 import 'attendance_page.dart';
-import 'instructor_registration_page.dart';
-import 'invigilator_registration_page.dart';
 import 'instructor_dashboard_page.dart';
 import 'invigilator_dashboard_page.dart';
 import 'invigilator_attendance_page.dart';
@@ -17,7 +15,6 @@ import 'admin_registration_page.dart';
 import 'attendance_sessions_page.dart';
 import 'attendance_view_page.dart';
 import 'user_management_page.dart';
-import 'security_registration_page.dart';
 import 'security_dashboard_page.dart';
 import 'security_verification_page.dart';
 import 'manage_courses_page.dart';
@@ -52,8 +49,6 @@ class MyApp extends StatelessWidget {
       routes: {
         '/admin_dashboard': (context) => const AdminDashboardPage(),
         '/student_registration': (context) => StudentRegistrationPage(),
-        '/instructor_registration': (context) => InstructorRegistrationPage(),
-        '/invigilator_registration': (context) => InvigilatorRegistrationPage(),
         '/instructor_dashboard': (context) => const InstructorDashboardPage(),
         '/invigilator_dashboard': (context) => const InvigilatorDashboardPage(),
         '/invigilator_attendance': (context) => const InvigilatorAttendancePage(),
@@ -66,7 +61,6 @@ class MyApp extends StatelessWidget {
         '/attendance_sessions': (context) => AttendanceSessionsPage(courseId: '', courseName: ''),
         '/attendance_view': (context) => const AttendanceViewPage(),
         '/user_management': (context) => const UserManagementPage(),
-        '/security_registration': (context) => const SecurityRegistrationPage(),
         '/security_dashboard': (context) => const SecurityDashboardPage(),
         '/security_verification': (context) => SecurityVerificationPage(),
         '/manage_courses': (context) => ManageCoursesPage(),

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'security_verification_page.dart';
-import 'security_registration_page.dart';
 
 class SecurityDashboardPage extends StatefulWidget {
   const SecurityDashboardPage({Key? key}) : super(key: key);
