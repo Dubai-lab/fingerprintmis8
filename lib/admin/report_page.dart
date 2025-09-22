@@ -4,6 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:open_file/open_file.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:share_plus/share_plus.dart';
 
 class AdminReportPage extends StatefulWidget {
   final String courseId;
@@ -104,6 +109,15 @@ class _AdminReportPageState extends State<AdminReportPage> {
     }
 
     try {
+      // Request storage permission
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Storage permission is required to download files')),
+        );
+        return;
+      }
+
       List<List<String>> csvData = [
         ['RegNumber', 'Student Name', 'Date', 'Status', 'Type', 'Course'],
         ..._attendanceReports.map((record) => [
@@ -120,19 +134,28 @@ class _AdminReportPageState extends State<AdminReportPage> {
 
       String csv = const ListToCsvConverter().convert(csvData);
 
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName = '${widget.courseCode}_${widget.reportType}_report.csv';
+      // Save to Downloads directory
+      final directory = Directory('/storage/emulated/0/Download');
+      if (!await directory.exists()) {
+        await directory.create(recursive: true);
+      }
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = '${widget.courseCode}_${widget.reportType}_report_$timestamp.csv';
       final path = '${directory.path}/$fileName';
       final file = File(path);
 
       await file.writeAsString(csv);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('CSV exported to $path')),
+        SnackBar(content: Text('CSV downloaded to Downloads folder')),
       );
+
+      // Open the file using the default app
+      await OpenFile.open(path);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error exporting CSV: $e')),
+        SnackBar(content: Text('Error downloading CSV: $e')),
       );
     }
   }
@@ -146,6 +169,7 @@ class _AdminReportPageState extends State<AdminReportPage> {
     }
 
     try {
+      // Generate CSV data
       List<List<String>> csvData = [
         ['RegNumber', 'Student Name', 'Date', 'Status', 'Type', 'Course'],
         ..._attendanceReports.map((record) => [
@@ -162,43 +186,188 @@ class _AdminReportPageState extends State<AdminReportPage> {
 
       String csv = const ListToCsvConverter().convert(csvData);
 
-      // Show print preview dialog
+      // Create a formatted report with header
+      String reportContent = '''
+ATTENDANCE REPORT
+================
+
+Course Information:
+- Course Name: ${widget.courseName}
+- Course Code: ${widget.courseCode}
+- Instructor: ${widget.instructorName}
+- Report Type: ${widget.reportType}
+- Total Records: ${_attendanceReports.length}
+
+Report Generated: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}
+
+$csv
+
+================
+End of Report
+''';
+
+      // Show options dialog
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Print Preview - ${widget.courseName} (${widget.courseCode})'),
+          title: Text('Print/Export Options - ${widget.courseName}'),
           content: Container(
             width: double.maxFinite,
-            height: 400,
-            child: SingleChildScrollView(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Text(csv),
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.print),
+                  title: const Text('Print Report'),
+                  subtitle: const Text('Print directly to printer'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _printDocument(reportContent);
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.share),
+                  title: const Text('Share Report'),
+                  subtitle: const Text('Share via email, WhatsApp, etc.'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _shareReport(reportContent);
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.preview),
+                  title: const Text('Preview Only'),
+                  subtitle: const Text('View report content'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _showPreview(reportContent);
+                  },
+                ),
+              ],
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Print functionality - In a real app, this would open the system print dialog')),
-                );
-              },
-              child: const Text('Print'),
+              child: const Text('Cancel'),
             ),
           ],
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error preparing print: $e')),
+        SnackBar(content: Text('Error preparing report: $e')),
       );
     }
+  }
+
+  Future<void> _printDocument(String content) async {
+    try {
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async {
+          final pdf = await Printing.convertHtml(
+            format: format,
+            html: '''
+            <html>
+              <head>
+                <style>
+                  body { font-family: Arial, sans-serif; margin: 20px; }
+                  h1 { color: #333; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                  h2 { color: #666; margin-top: 30px; }
+                  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                  th { background-color: #f2f2f2; font-weight: bold; }
+                  .header-info { background-color: #f9f9f9; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+                </style>
+              </head>
+              <body>
+                <h1>Attendance Report</h1>
+                <div class="header-info">
+                  <p><strong>Course Name:</strong> ${widget.courseName}</p>
+                  <p><strong>Course Code:</strong> ${widget.courseCode}</p>
+                  <p><strong>Instructor:</strong> ${widget.instructorName}</p>
+                  <p><strong>Report Type:</strong> ${widget.reportType}</p>
+                  <p><strong>Total Records:</strong> ${_attendanceReports.length}</p>
+                  <p><strong>Generated:</strong> ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}</p>
+                </div>
+                <table>
+                  <tr>
+                    <th>RegNumber</th>
+                    <th>Student Name</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Type</th>
+                    <th>Course</th>
+                  </tr>
+                  ${_attendanceReports.map((record) => '''
+                  <tr>
+                    <td>${record['regNumber']}</td>
+                    <td>${record['studentName']}</td>
+                    <td>${record['timestamp'] != null ? DateFormat('yyyy-MM-dd HH:mm').format(record['timestamp']) : ''}</td>
+                    <td>${record['status']}</td>
+                    <td>${record['type']}</td>
+                    <td>${record['courseName'] ?? ''}</td>
+                  </tr>
+                  ''').join('')}
+                </table>
+              </body>
+            </html>
+            ''',
+          );
+          return pdf;
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error printing: $e')),
+      );
+    }
+  }
+
+  Future<void> _shareReport(String content) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = '${widget.courseCode}_${widget.reportType}_report_$timestamp.txt';
+      final path = '${directory.path}/$fileName';
+      final file = File(path);
+
+      await file.writeAsString(content);
+
+      await Share.shareXFiles(
+        [XFile(path)],
+        text: 'Attendance Report - ${widget.courseName} (${widget.courseCode})',
+        subject: 'Attendance Report',
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sharing report: $e')),
+      );
+    }
+  }
+
+  Future<void> _showPreview(String content) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Report Preview - ${widget.courseName}'),
+        content: Container(
+          width: double.maxFinite,
+          height: 400,
+          child: SingleChildScrollView(
+            child: SelectableText(content),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildAttendanceTable() {

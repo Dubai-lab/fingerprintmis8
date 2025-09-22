@@ -381,6 +381,7 @@ class _AttendancePageState extends State<AttendancePage> {
     }
 
     final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
     final todayDateStr = "${today.year}-${today.month.toString().padLeft(2,'0')}-${today.day.toString().padLeft(2,'0')}";
 
     try {
@@ -393,12 +394,13 @@ class _AttendancePageState extends State<AttendancePage> {
 
       final joinedStudents = joinedStudentsSnapshot.docs.map((doc) => doc.id).toSet();
 
-      // Get students who have attendance records today
+      // Get students who have attendance records today FOR THIS SPECIFIC COURSE
       final attendanceSnapshot = await FirebaseFirestore.instance
           .collection('instructor_courses')
           .doc(_selectedCourseId)
           .collection('attendance')
-          .where('timestamp', isGreaterThanOrEqualTo: DateTime(today.year, today.month, today.day))
+          .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+          .where('courseId', isEqualTo: _selectedCourseId)  // Additional filter to ensure course-specific records
           .get();
 
       final attendedStudents = attendanceSnapshot.docs.map((doc) => doc.id.split('_')[0]).toSet();
@@ -406,6 +408,14 @@ class _AttendancePageState extends State<AttendancePage> {
       // Students who joined but did not attend
       final absentStudents = joinedStudents.difference(attendedStudents);
 
+      if (absentStudents.isEmpty) {
+        setState(() {
+          _status = 'No absent students to mark.';
+        });
+        return;
+      }
+
+      int markedCount = 0;
       for (var regNumber in absentStudents) {
         final sanitizedRegNumber = regNumber.replaceAll('/', '_');
         final attendanceDocId = "${sanitizedRegNumber}_$todayDateStr";
@@ -424,13 +434,15 @@ class _AttendancePageState extends State<AttendancePage> {
             'timestamp': FieldValue.serverTimestamp(),
             'status': 'Absent',
             'courseId': _selectedCourseId,
+            'courseName': _selectedCourseName,
             'sessionId': widget.sessionId,
           });
+          markedCount++;
         }
       }
 
       setState(() {
-        _status = 'Absent students marked successfully.';
+        _status = 'Marked $markedCount absent students successfully.';
       });
 
       await _loadTodayAttendance();

@@ -49,6 +49,9 @@ dependencies:
   csv: ^6.0.0
   flutter_launcher_icons: ^0.14.4
   flutter_lints: ^6.0.0
+  share_plus: ^12.0.0
+  printing: ^5.14.2
+  pdf: ^3.11.3
   
 
 dev_dependencies:
