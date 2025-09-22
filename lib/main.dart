@@ -12,7 +12,6 @@ import 'invigilator_dashboard_page.dart';
 import 'invigilator_attendance_page.dart';
 import 'invigilator_attendance_report_page.dart';
 import 'login_page.dart';
-import 'invigilator_attendance_selection_page.dart';
 import 'change_password_page.dart';
 import 'admin_registration_page.dart';
 import 'attendance_sessions_page.dart';
@@ -57,7 +56,6 @@ class MyApp extends StatelessWidget {
         '/invigilator_registration': (context) => InvigilatorRegistrationPage(),
         '/instructor_dashboard': (context) => const InstructorDashboardPage(),
         '/invigilator_dashboard': (context) => const InvigilatorDashboardPage(),
-        '/invigilator_attendance_selection': (context) => const InvigilatorAttendanceSelectionPage(),
         '/invigilator_attendance': (context) => const InvigilatorAttendancePage(),
         '/invigilator_attendance_report': (context) => const InvigilatorAttendanceReportPage(),
         '/attendance': (context) => AttendancePage(courseId: '', sessionId: ''),

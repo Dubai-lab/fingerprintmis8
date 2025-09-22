@@ -170,16 +170,27 @@ class _AttendanceViewPageState extends State<AttendanceViewPage> {
   }
 
   Future<void> _exportToCsv() async {
+    if (_attendanceRecords.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No attendance records to export')),
+      );
+      return;
+    }
+
     try {
       // Request storage permissions first
       var storageStatus = await Permission.storage.request();
-      var manageStorageStatus = await Permission.manageExternalStorage.request();
 
-      if (!storageStatus.isGranted || !manageStorageStatus.isGranted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Storage permissions are required to export files')),
-        );
-        return;
+      // For Android 11+ (API 30+), we need MANAGE_EXTERNAL_STORAGE for Downloads folder
+      bool needsManageStorage = false;
+      if (await Permission.manageExternalStorage.isGranted == false) {
+        needsManageStorage = true;
+        var manageStorageStatus = await Permission.manageExternalStorage.request();
+        if (!manageStorageStatus.isGranted) {
+          // If MANAGE_EXTERNAL_STORAGE is denied, try alternative approach
+          _showStoragePermissionExplanation();
+          return;
+        }
       }
 
       String courseName = '';
@@ -200,26 +211,114 @@ class _AttendanceViewPageState extends State<AttendanceViewPage> {
             '${i + 1},${record['regNumber'] ?? ''},${record['status'] ?? ''},$date\n';
       }
 
-      // Save to Downloads directory
-      final directory = Directory('/storage/emulated/0/Download');
-      if (!await directory.exists()) {
-        await directory.create(recursive: true);
+      // Try to save to Downloads directory first
+      try {
+        final directory = Directory('/storage/emulated/0/Download');
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final fileName = 'attendance_${courseName.replaceAll(' ', '_')}_${sessionName}_$timestamp.csv';
+        final path = '${directory.path}/$fileName';
+        final file = File(path);
+        await file.writeAsString(csv);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Attendance exported to Downloads: $fileName')),
+        );
+
+        // Open the file using the default app
+        await OpenFile.open(path);
+      } catch (e) {
+        // If Downloads folder fails, try app-specific directory
+        await _saveToAppDirectory(csv, courseName, sessionName);
       }
-      final path = '${directory.path}/attendance_${DateTime.now().millisecondsSinceEpoch}.csv';
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to export attendance: $e')),
+      );
+    }
+  }
+
+  Future<void> _saveToAppDirectory(String csv, String courseName, String sessionName) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = 'attendance_${courseName.replaceAll(' ', '_')}_${sessionName}_$timestamp.csv';
+      final path = '${directory.path}/$fileName';
       final file = File(path);
+
       await file.writeAsString(csv);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Attendance exported to $path')),
+        SnackBar(
+          content: Text('Attendance saved to app documents: $fileName\nYou can find it in your device file manager'),
+          duration: Duration(seconds: 5),
+        ),
       );
 
       // Open the file using the default app
       await OpenFile.open(path);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to export attendance: $e')),
+        SnackBar(content: Text('Error saving file: $e')),
       );
     }
+  }
+
+  void _showStoragePermissionExplanation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Storage Permission Required'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('To export attendance reports to your Downloads folder, this app needs storage access permission.'),
+            SizedBox(height: 16),
+            Text('Why we need this permission:'),
+            SizedBox(height: 8),
+            Text('• Save attendance reports as CSV files'),
+            Text('• Allow you to access reports from your Downloads folder'),
+            Text('• Share reports with other apps'),
+            SizedBox(height: 16),
+            Text('You can still export reports without this permission, but files will be saved in the app\'s private folder.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              // Try alternative save method
+              String courseName = '';
+              String sessionName = '';
+              if (_selectedCourseId != null) {
+                final course = _courses.firstWhere((c) => c['id'] == _selectedCourseId, orElse: () => {});
+                courseName = course['name'] ?? '';
+              }
+              if (_selectedSession != null) {
+                sessionName = _selectedSession!;
+              }
+
+              String csv = 'Course:,$courseName\nSession:,$sessionName\n\nS/N,RegNo.,Attendance,Date\n';
+              for (int i = 0; i < _attendanceRecords.length; i++) {
+                final record = _attendanceRecords[i];
+                final date = _formatTimestamp(record['timestamp']);
+                csv +=
+                    '${i + 1},${record['regNumber'] ?? ''},${record['status'] ?? ''},$date\n';
+              }
+              await _saveToAppDirectory(csv, courseName, sessionName);
+            },
+            child: Text('Continue Anyway'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
