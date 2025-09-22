@@ -183,8 +183,8 @@ class _SecurityVerificationPageState extends State<SecurityVerificationPage> {
             end: Alignment.bottomCenter,
           ),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [

@@ -198,12 +198,6 @@ class _AttendancePageState extends State<AttendancePage> {
   }
 
   Future<void> _startScanning() async {
-    setState(() {
-      _scanning = true;
-      _status = 'Opening device...';
-      _deviceOpened = false;
-    });
-
     if (_selectedCourseId == null) {
       setState(() {
         _status = 'Please select a course before scanning.';
@@ -212,29 +206,42 @@ class _AttendancePageState extends State<AttendancePage> {
       return;
     }
 
-    try {
-      await _fingerprintSdk.openDevice();
-    } catch (e) {
+    // If device not opened, open it first
+    if (!_deviceOpened) {
       setState(() {
-        _status = 'Failed to open device: $e';
-        _scanning = false;
+        _scanning = true;
+        _status = 'Opening device...';
         _deviceOpened = false;
       });
-      return;
+
+      try {
+        await _fingerprintSdk.openDevice();
+        setState(() {
+          _status = 'Device ready. Place finger on scanner...';
+          _deviceOpened = true;
+        });
+      } catch (e) {
+        setState(() {
+          _status = 'Failed to open device: $e';
+          _scanning = false;
+          _deviceOpened = false;
+        });
+        return;
+      }
     }
 
+    // Device is ready, start scanning immediately
     setState(() {
-      _status = 'Place finger on scanner...';
-      _deviceOpened = true;
+      _scanning = true;
+      _status = 'Scanning fingerprint...';
     });
 
     try {
-      await _fingerprintSdk.enrollTemplate();
+      await _fingerprintSdk.generateTemplate();
     } catch (e) {
       setState(() {
         _status = 'Failed to scan fingerprint: $e';
         _scanning = false;
-        _deviceOpened = false;
       });
       return;
     }
@@ -585,4 +592,3 @@ class _AttendancePageState extends State<AttendancePage> {
     );
   }
 }
-

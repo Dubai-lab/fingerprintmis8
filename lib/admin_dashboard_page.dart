@@ -8,11 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'student_registration_page.dart';
-import 'instructor_registration_page.dart';
-import 'invigilator_registration_page.dart';
 import 'package:fingerprintmis8/create_courses_page.dart';
 import 'package:fingerprintmis8/student_verification_page.dart';
-import 'package:fingerprintmis8/security_registration_page.dart';
 import 'admin_dashboard_chart.dart';
 import 'package:fingerprintmis8/auth/registeration_page.dart';
 

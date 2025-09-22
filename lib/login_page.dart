@@ -15,7 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  String _status = 'Idle';
+  String _status = '';
   bool _loading = false;
 
   Future<void> _login() async {
@@ -155,6 +155,7 @@ class _LoginPageState extends State<LoginPage> {
                                   borderSide: BorderSide.none,
                                 ),
                               ),
+                              // Email validation
                               validator: (value) =>
                                   value == null || value.isEmpty ? 'Enter email' : null,
                             ),

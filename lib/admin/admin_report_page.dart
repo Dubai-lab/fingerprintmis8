@@ -11,23 +11,19 @@ import 'package:pdf/pdf.dart';
 import 'package:share_plus/share_plus.dart';
 
 class AdminReportPage extends StatefulWidget {
-  final String courseId;
-  final String courseName;
-  final String courseCode;
-  final String instructorName;
-  final String reportType;
-  final String startDate;
-  final String endDate;
+  final String? courseId;
+  final String? courseName;
+  final String? courseCode;
+  final String? instructorName;
+  final String? reportType;
 
   const AdminReportPage({
     Key? key,
-    required this.courseId,
-    required this.courseName,
-    required this.courseCode,
-    required this.instructorName,
-    required this.reportType,
-    required this.startDate,
-    required this.endDate,
+    this.courseId,
+    this.courseName,
+    this.courseCode,
+    this.instructorName,
+    this.reportType,
   }) : super(key: key);
 
   @override
@@ -35,73 +31,78 @@ class AdminReportPage extends StatefulWidget {
 }
 
 class _AdminReportPageState extends State<AdminReportPage> {
-  List<Map<String, dynamic>> _attendanceReports = [];
+  List<Map<String, dynamic>> _attendanceRecords = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  String _noRecordMessage = '';
 
   @override
   void initState() {
     super.initState();
-    _loadAttendanceReports();
+    _loadAttendanceRecords();
   }
 
-  Future<void> _loadAttendanceReports() async {
+  Future<void> _loadAttendanceRecords() async {
+    if (widget.courseId == null || widget.courseId!.isEmpty || widget.reportType == null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Course ID or report type not provided';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = '';
+      _noRecordMessage = '';
+      _attendanceRecords = [];
     });
 
     try {
-      DateTime? startDate;
-      if (widget.startDate.isNotEmpty) {
-        startDate = DateTime.parse(widget.startDate);
-      }
-
+      // Load attendance from the invigilator_activities collection
       Query<Map<String, dynamic>> query = FirebaseFirestore.instance
-          .collection('instructor_courses')
-          .doc(widget.courseId)
-          .collection('attendance');
+          .collection('invigilator_activities')
+          .doc(widget.reportType)
+          .collection('attendance')
+          .where('courseId', isEqualTo: widget.courseId);
 
-      if (startDate != null) {
-        query = query.where('timestamp', isGreaterThanOrEqualTo: startDate);
+      final querySnapshot = await query.orderBy('timestamp', descending: true).get();
+
+      if (querySnapshot.docs.isEmpty) {
+        setState(() {
+          _noRecordMessage = 'No attendance records found for ${widget.reportType} in this course.';
+          _isLoading = false;
+        });
+        return;
       }
 
-      final attendanceSnapshot = await query.get();
+      setState(() {
+        _attendanceRecords = querySnapshot.docs.map((doc) {
+          final data = doc.data();
 
-      _attendanceReports = attendanceSnapshot.docs.map((doc) {
-        final data = doc.data();
-        String studentName = data['studentName'] ?? 'Unknown';
-
-        // If studentName is unknown, try to fetch from students collection using regNumber
-        if (studentName == 'Unknown' && data.containsKey('regNumber')) {
-          final regNumber = data['regNumber'];
-          // For now set as Unknown, you can implement async fetch here if needed
-          studentName = 'Unknown';
-        }
-
-        return {
-          'id': doc.id,
-          'studentName': studentName,
-          'regNumber': data['regNumber'] ?? '',
-          'timestamp': data['timestamp']?.toDate() ?? DateTime.now(),
-          'status': data['status'] ?? 'Present',
-          'type': data['type'] ?? widget.reportType,
-          'courseName': widget.courseName,
-        };
-      }).toList();
+          return {
+            'id': doc.id,
+            'regNumber': data['regNumber'] ?? '',
+            'timestamp': data['timestamp']?.toDate() ?? DateTime.now(),
+            'status': data['status'] ?? 'Present',
+            'activity': data['activity'] ?? widget.reportType ?? 'Unknown',
+            'courseId': data['courseId'] ?? '',
+            'courseName': widget.courseName ?? '',
+            'courseCode': widget.courseCode ?? '',
+          };
+        }).toList();
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error loading attendance reports: $e';
-      });
-    } finally {
-      setState(() {
+        _errorMessage = 'Error loading attendance records: $e';
         _isLoading = false;
       });
     }
   }
 
   Future<void> _exportToCSV() async {
-    if (_attendanceReports.isEmpty) {
+    if (_attendanceRecords.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No attendance records to export')),
       );
@@ -109,25 +110,26 @@ class _AdminReportPageState extends State<AdminReportPage> {
     }
 
     try {
-      // Request storage permission
-      var status = await Permission.storage.request();
-      if (!status.isGranted) {
+      // Request storage permissions first
+      var storageStatus = await Permission.storage.request();
+      var manageStorageStatus = await Permission.manageExternalStorage.request();
+
+      if (!storageStatus.isGranted || !manageStorageStatus.isGranted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Storage permission is required to download files')),
+          const SnackBar(content: Text('Storage permissions are required to download files')),
         );
         return;
       }
 
       List<List<String>> csvData = [
-        ['RegNumber', 'Student Name', 'Date', 'Status', 'Type', 'Course'],
-        ..._attendanceReports.map((record) => [
+        ['RegNumber', 'Date', 'Status', 'Type', 'Course'],
+        ..._attendanceRecords.map((record) => [
               record['regNumber'],
-              record['studentName'],
               record['timestamp'] != null
                   ? DateFormat('yyyy-MM-dd HH:mm').format(record['timestamp'])
                   : '',
               record['status'],
-              record['type'],
+              record['activity'],
               record['courseName'] ?? '',
             ]),
       ];
@@ -161,7 +163,7 @@ class _AdminReportPageState extends State<AdminReportPage> {
   }
 
   Future<void> _printReport() async {
-    if (_attendanceReports.isEmpty) {
+    if (_attendanceRecords.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No attendance records to print')),
       );
@@ -171,15 +173,14 @@ class _AdminReportPageState extends State<AdminReportPage> {
     try {
       // Generate CSV data
       List<List<String>> csvData = [
-        ['RegNumber', 'Student Name', 'Date', 'Status', 'Type', 'Course'],
-        ..._attendanceReports.map((record) => [
+        ['RegNumber', 'Date', 'Status', 'Type', 'Course'],
+        ..._attendanceRecords.map((record) => [
               record['regNumber'],
-              record['studentName'],
               record['timestamp'] != null
                   ? DateFormat('yyyy-MM-dd HH:mm').format(record['timestamp'])
                   : '',
               record['status'],
-              record['type'],
+              record['activity'],
               record['courseName'] ?? '',
             ]),
       ];
@@ -196,7 +197,7 @@ Course Information:
 - Course Code: ${widget.courseCode}
 - Instructor: ${widget.instructorName}
 - Report Type: ${widget.reportType}
-- Total Records: ${_attendanceReports.length}
+- Total Records: ${_attendanceRecords.length}
 
 Report Generated: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}
 
@@ -289,25 +290,23 @@ End of Report
                   <p><strong>Course Code:</strong> ${widget.courseCode}</p>
                   <p><strong>Instructor:</strong> ${widget.instructorName}</p>
                   <p><strong>Report Type:</strong> ${widget.reportType}</p>
-                  <p><strong>Total Records:</strong> ${_attendanceReports.length}</p>
+                  <p><strong>Total Records:</strong> ${_attendanceRecords.length}</p>
                   <p><strong>Generated:</strong> ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}</p>
                 </div>
                 <table>
                   <tr>
                     <th>RegNumber</th>
-                    <th>Student Name</th>
                     <th>Date</th>
                     <th>Status</th>
                     <th>Type</th>
                     <th>Course</th>
                   </tr>
-                  ${_attendanceReports.map((record) => '''
+                  ${_attendanceRecords.map((record) => '''
                   <tr>
                     <td>${record['regNumber']}</td>
-                    <td>${record['studentName']}</td>
                     <td>${record['timestamp'] != null ? DateFormat('yyyy-MM-dd HH:mm').format(record['timestamp']) : ''}</td>
                     <td>${record['status']}</td>
-                    <td>${record['type']}</td>
+                    <td>${record['activity']}</td>
                     <td>${record['courseName'] ?? ''}</td>
                   </tr>
                   ''').join('')}
@@ -371,7 +370,7 @@ End of Report
   }
 
   Widget _buildAttendanceTable() {
-    if (_attendanceReports.isEmpty) {
+    if (_attendanceRecords.isEmpty) {
       return const Center(child: Text('No attendance records found.'));
     }
 
@@ -380,23 +379,21 @@ End of Report
       child: DataTable(
         columns: const [
           DataColumn(label: Text('RegNumber')),
-          DataColumn(label: Text('Student Name')),
           DataColumn(label: Text('Date')),
           DataColumn(label: Text('Status')),
           DataColumn(label: Text('Activity')),
           DataColumn(label: Text('Course')),
         ],
-        rows: _attendanceReports.map((record) {
+        rows: _attendanceRecords.map((record) {
           final timestamp = record['timestamp'] as DateTime?;
           final formattedDate = timestamp != null
               ? '${timestamp.year}-${timestamp.month.toString().padLeft(2, '0')}-${timestamp.day.toString().padLeft(2, '0')} ${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}'
               : 'Unknown';
           return DataRow(cells: [
             DataCell(Text(record['regNumber'])),
-            DataCell(Text(record['studentName'])),
             DataCell(Text(formattedDate)),
             DataCell(Text(record['status'])),
-            DataCell(Text(record['type'])),
+            DataCell(Text(record['activity'])),
             DataCell(Text(record['courseName'] ?? '')),
           ]);
         }).toList(),
@@ -441,7 +438,7 @@ End of Report
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: _loadAttendanceReports,
+                        onPressed: _loadAttendanceRecords,
                         child: const Text('Retry'),
                       ),
                     ],
@@ -468,10 +465,6 @@ End of Report
                               Text('Course Code: ${widget.courseCode}'),
                               Text('Instructor: ${widget.instructorName}'),
                               Text('Report Type: ${widget.reportType}'),
-                              if (widget.startDate.isNotEmpty)
-                                Text('Start Date: ${widget.startDate}'),
-                              if (widget.endDate.isNotEmpty)
-                                Text('End Date: ${widget.endDate}'),
                             ],
                           ),
                         ),
@@ -486,7 +479,7 @@ End of Report
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Total Records: ${_attendanceReports.length}',
+                                'Total Records: ${_attendanceRecords.length}',
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               Row(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:csv/csv.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
 
 class InvigilatorAttendanceReportPage extends StatefulWidget {
   const InvigilatorAttendanceReportPage({Key? key}) : super(key: key);
@@ -122,28 +122,49 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
       return;
     }
 
+    try {
+      // Request storage permissions first
+      var storageStatus = await Permission.storage.request();
+      var manageStorageStatus = await Permission.manageExternalStorage.request();
+
+      if (!storageStatus.isGranted || !manageStorageStatus.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Storage permissions are required to export files')),
+        );
+        return;
+      }
+
       List<List<String>> csvData = [
-      ['RegNumber', 'Timestamp', 'Status', 'Activity', 'CourseName'],
-      ..._attendanceRecords.map((record) => [
-            record['regNumber'],
-            record['timestamp'] != null ? record['timestamp'].toString() : '',
-            record['status'],
-            record['activity'],
-            record['courseName'],
-          ]),
-    ];
+        ['RegNumber', 'Timestamp', 'Status', 'Activity', 'CourseName'],
+        ..._attendanceRecords.map((record) => [
+              record['regNumber'],
+              record['timestamp'] != null ? record['timestamp'].toString() : '',
+              record['status'],
+              record['activity'],
+              record['courseName'],
+            ]),
+      ];
 
-    String csv = const ListToCsvConverter().convert(csvData);
+      String csv = const ListToCsvConverter().convert(csvData);
 
-    final directory = await getApplicationDocumentsDirectory();
-    final path = '${directory.path}/attendance_report.csv';
-    final file = File(path);
+      // Save to Downloads directory
+      final directory = Directory('/storage/emulated/0/Download');
+      if (!await directory.exists()) {
+        await directory.create(recursive: true);
+      }
+      final path = '${directory.path}/invigilator_attendance_report_${DateTime.now().millisecondsSinceEpoch}.csv';
+      final file = File(path);
 
-    await file.writeAsString(csv);
+      await file.writeAsString(csv);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('CSV exported to $path')),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('CSV exported to $path')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to export attendance: $e')),
+      );
+    }
   }
 
   Widget _buildAttendanceTable() {

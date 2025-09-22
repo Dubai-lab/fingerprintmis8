@@ -171,6 +171,17 @@ class _AttendanceViewPageState extends State<AttendanceViewPage> {
 
   Future<void> _exportToCsv() async {
     try {
+      // Request storage permissions first
+      var storageStatus = await Permission.storage.request();
+      var manageStorageStatus = await Permission.manageExternalStorage.request();
+
+      if (!storageStatus.isGranted || !manageStorageStatus.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Storage permissions are required to export files')),
+        );
+        return;
+      }
+
       String courseName = '';
       String sessionName = '';
       if (_selectedCourseId != null) {
