@@ -2,6 +2,7 @@ import 'package:fingerprintmis8/attendance_page.dart';
 import 'package:fingerprintmis8/attendance_view_page.dart';
 import 'package:fingerprintmis8/settings_page.dart';
 import 'package:fingerprintmis8/joined_students_page.dart';
+import 'package:fingerprintmis8/widgets/default_password_warning_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,29 +16,11 @@ class InstructorDashboardPage extends StatefulWidget {
 
 class _InstructorDashboardPageState extends State<InstructorDashboardPage> {
   int _dailyAttendanceCount = 0;
-  bool _showChangePasswordPrompt = false;
 
   @override
   void initState() {
     super.initState();
     _fetchDailyAttendanceCount();
-    _checkDefaultPassword();
-  }
-
-  void _checkDefaultPassword() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
-    if (userId.isEmpty) return;
-
-    final userDoc = await FirebaseFirestore.instance.collection('instructors').doc(userId).get();
-    if (userDoc.exists) {
-      bool defaultPassword = userDoc.get('defaultPassword') ?? false;
-      String role = userDoc.get('role') ?? '';
-      if (defaultPassword && role != 'admin') {
-        setState(() {
-          _showChangePasswordPrompt = true;
-        });
-      }
-    }
   }
 
   void _fetchDailyAttendanceCount() async {
@@ -204,32 +187,8 @@ class _InstructorDashboardPageState extends State<InstructorDashboardPage> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            if (_showChangePasswordPrompt)
-              Card(
-                color: Colors.amber.shade100,
-                margin: EdgeInsets.only(bottom: 20),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      Icon(Icons.warning, color: Colors.amber.shade800),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'You are using a default password. Please change it.',
-                          style: TextStyle(color: Colors.amber.shade800, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      ElevatedButton(
-                        child: Text('Change Password'),
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/change-password');
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            // Reusable default password warning widget
+            const DefaultPasswordWarningWidget(),
             Card(
               elevation: 6,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),

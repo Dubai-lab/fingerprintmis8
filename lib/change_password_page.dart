@@ -16,6 +16,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   String _status = 'Idle';
   bool _loading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   Future<void> _changePassword() async {
     if (_formKey.currentState == null || !_formKey.currentState!.validate()) return;
@@ -45,23 +47,23 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       await user.updatePassword(_passwordController.text);
       await user.reload();
 
-      // Update Firestore to clear defaultPassword flag
+      // Update Firestore to clear defaultPassword field
       // Try updating in instructors, invigilators, and security collections
       try {
         await FirebaseFirestore.instance.collection('instructors').doc(user.uid).update({
-          'defaultPassword': false,
-          'passwordSetTime': null,
+          'defaultPassword': null, // Clear the default password string
+          'passwordSetTime': DateTime.now().toIso8601String(), // Update timestamp
         });
       } catch (_) {
         try {
           await FirebaseFirestore.instance.collection('invigilators').doc(user.uid).update({
-            'defaultPassword': false,
-            'passwordSetTime': null,
+            'defaultPassword': null, // Clear the default password string
+            'passwordSetTime': DateTime.now().toIso8601String(), // Update timestamp
           });
         } catch (_) {
           await FirebaseFirestore.instance.collection('security').doc(user.uid).update({
-            'defaultPassword': false,
-            'passwordSetTime': null,
+            'defaultPassword': null, // Clear the default password string
+            'passwordSetTime': DateTime.now().toIso8601String(), // Update timestamp
           });
         }
       }
@@ -70,8 +72,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         _status = 'Password changed successfully';
       });
 
-      // Navigate to appropriate dashboard or login page
-      Navigator.pushReplacementNamed(context, '/login');
+      // Return true to indicate password was changed successfully
+      Navigator.pop(context, true);
     } catch (e) {
       setState(() {
         _status = 'Failed to change password: $e';
@@ -129,8 +131,21 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           prefixIcon: Icon(Icons.lock_outline, color: Colors.deepPurple),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.deepPurple,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                         ),
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         validator: (value) =>
                             value == null || value.length < 6 ? 'Password must be at least 6 characters' : null,
                       ),
@@ -143,8 +158,21 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           prefixIcon: Icon(Icons.lock_outline, color: Colors.deepPurple),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.deepPurple,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                              });
+                            },
+                          ),
                         ),
-                        obscureText: true,
+                        obscureText: _obscureConfirmPassword,
                         validator: (value) =>
                             value == null || value.length < 6 ? 'Password must be at least 6 characters' : null,
                       ),

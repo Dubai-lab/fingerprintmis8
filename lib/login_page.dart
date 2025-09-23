@@ -17,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
 
   String _status = '';
   bool _loading = false;
+  bool _obscurePassword = true; // Add this for password visibility toggle
 
   Future<void> _login() async {
     if (_formKey.currentState == null || !_formKey.currentState!.validate()) return;
@@ -170,8 +171,21 @@ class _LoginPageState extends State<LoginPage> {
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
                                 ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: const Color.fromARGB(255, 28, 1, 177),
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
                               ),
-                              obscureText: true,
+                              obscureText: _obscurePassword,
                               validator: (value) =>
                                   value == null || value.isEmpty ? 'Enter password' : null,
                             ),

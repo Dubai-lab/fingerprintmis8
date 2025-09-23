@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fingerprintmis8/widgets/default_password_warning_widget.dart';
 
 class SecurityDashboardPage extends StatefulWidget {
   const SecurityDashboardPage({Key? key}) : super(key: key);
@@ -258,6 +259,11 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 24),
+
+              // Default Password Warning Widget
+              const DefaultPasswordWarningWidget(),
 
               const SizedBox(height: 24),
 
