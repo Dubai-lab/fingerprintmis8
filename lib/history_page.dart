@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'attendance_report_page.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -28,9 +29,23 @@ class _HistoryPageState extends State<HistoryPage> {
     });
 
     try {
+      // Get current instructor ID
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          _status = 'User not authenticated';
+          _loading = false;
+        });
+        return;
+      }
+
+      final instructorId = user.uid;
       final now = DateTime.now();
+
+      // Query only courses taught by current instructor that have ended
       final querySnapshot = await FirebaseFirestore.instance
           .collection('instructor_courses')
+          .where('instructorId', isEqualTo: instructorId)
           .where('endDate', isLessThanOrEqualTo: now)
           .orderBy('endDate', descending: true)
           .get();
@@ -44,6 +59,7 @@ class _HistoryPageState extends State<HistoryPage> {
             'session': data['session'] ?? '',
             'startDate': (data['startDate'] as Timestamp?)?.toDate(),
             'endDate': (data['endDate'] as Timestamp?)?.toDate(),
+            'instructorName': data['instructorName'] ?? '',
           };
         }).toList();
         _loading = false;

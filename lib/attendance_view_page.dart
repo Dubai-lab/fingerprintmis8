@@ -121,14 +121,12 @@ class _AttendanceViewPageState extends State<AttendanceViewPage> {
 
     if (_selectedCourseId != null && session != null) {
       try {
-        final today = DateTime.now();
-        final startOfDay = DateTime(today.year, today.month, today.day);
-
+        // Query ALL attendance records for this course (no date filtering)
         final querySnapshot = await FirebaseFirestore.instance
             .collection('instructor_courses')
             .doc(_selectedCourseId)
             .collection('attendance')
-            .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+            .orderBy('timestamp', descending: true) // Most recent first
             .get();
 
         setState(() {
