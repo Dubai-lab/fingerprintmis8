@@ -113,14 +113,7 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
             icon: const Icon(Icons.refresh),
             onPressed: _loadTodayVerifications,
             tooltip: 'Refresh Statistics',
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-            tooltip: 'Logout',
+            color: Colors.black,
           ),
         ],
       ),
