@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fingerprintmis8/widgets/default_password_warning_widget.dart';
 
 class InvigilatorDashboardPage extends StatefulWidget {
