@@ -19,6 +19,55 @@ class _ActivityPageState extends State<ActivityPage> {
     super.initState();
     _loadCourses();
     _loadScheduledActivities();
+
+    // Set up periodic check for expired activities (every 5 minutes)
+    Future.delayed(const Duration(minutes: 5), () {
+      if (mounted) {
+        _checkForExpiredActivities();
+      }
+    });
+  }
+
+  Future<void> _checkForExpiredActivities() async {
+    try {
+      final querySnapshot = await _firestore.collection('scheduled_activities').get();
+      final activities = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'courseId': data['courseId'] ?? '',
+          'courseName': data['courseName'] ?? '',
+          'activityType': data['activityType'] ?? '',
+          'scheduledDate': data['scheduledDate']?.toDate(),
+          'startTime': data['startTime'] ?? '',
+          'endTime': data['endTime'] ?? '',
+          'status': data['status'] ?? 'scheduled',
+        };
+      }).toList();
+
+      await _checkAndUpdateExpiredActivities(activities);
+
+      // Update the UI if any activities were marked as completed
+      if (mounted) {
+        setState(() {
+          _scheduledActivities = activities;
+        });
+      }
+
+      // Schedule next check
+      Future.delayed(const Duration(minutes: 5), () {
+        if (mounted) {
+          _checkForExpiredActivities();
+        }
+      });
+    } catch (e) {
+      // Schedule next check even if there's an error
+      Future.delayed(const Duration(minutes: 5), () {
+        if (mounted) {
+          _checkForExpiredActivities();
+        }
+      });
+    }
   }
 
   Future<void> _loadCourses() async {
@@ -65,6 +114,9 @@ class _ActivityPageState extends State<ActivityPage> {
         };
       }).toList();
 
+      // Check and update expired activities
+      await _checkAndUpdateExpiredActivities(activities);
+
       setState(() {
         _scheduledActivities = activities;
         _isLoading = false;
@@ -76,6 +128,53 @@ class _ActivityPageState extends State<ActivityPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading activities: $e')),
       );
+    }
+  }
+
+  Future<void> _checkAndUpdateExpiredActivities(List<Map<String, dynamic>> activities) async {
+    final now = DateTime.now();
+
+    for (var activity in activities) {
+      // Only check scheduled activities that have end times
+      if (activity['status'] == 'scheduled' &&
+          activity['endTime'].isNotEmpty &&
+          activity['scheduledDate'] != null) {
+
+        try {
+          final scheduledDate = activity['scheduledDate'];
+          final endTime = activity['endTime'];
+
+          // Parse end time (format: "HH:mm")
+          final timeParts = endTime.split(':');
+          if (timeParts.length == 2) {
+            final endHour = int.parse(timeParts[0]);
+            final endMinute = int.parse(timeParts[1]);
+
+            // Create end date time
+            final endDateTime = DateTime(
+              scheduledDate.year,
+              scheduledDate.month,
+              scheduledDate.day,
+              endHour,
+              endMinute,
+            );
+
+            // If current time is past the end time, mark as completed
+            if (now.isAfter(endDateTime)) {
+              await _firestore.collection('scheduled_activities').doc(activity['id']).update({
+                'status': 'completed',
+                'completedAt': FieldValue.serverTimestamp(),
+              });
+
+              // Update the local activity status
+              activity['status'] = 'completed';
+            }
+          }
+        } catch (e) {
+          // If there's an error parsing time, skip this activity
+          continue;
+        }
+      }
     }
   }
 
