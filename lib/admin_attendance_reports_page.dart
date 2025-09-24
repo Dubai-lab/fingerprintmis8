@@ -13,14 +13,14 @@ class _AdminAttendanceReportsPageState extends State<AdminAttendanceReportsPage>
   final TextEditingController _searchController = TextEditingController();
 
   String _selectedReportType = 'CAT';
-  List<Map<String, dynamic>> _courses = [];
-  List<Map<String, dynamic>> _filteredCourses = [];
+  List<Map<String, dynamic>> _scheduledActivities = [];
+  List<Map<String, dynamic>> _filteredActivities = [];
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadCourses();
+    _loadScheduledActivities();
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -32,28 +32,32 @@ class _AdminAttendanceReportsPageState extends State<AdminAttendanceReportsPage>
   }
 
   void _onSearchChanged() {
-    _filterCourses(_searchController.text);
+    _filterActivities(_searchController.text);
   }
 
-  Future<void> _loadCourses() async {
+  Future<void> _loadScheduledActivities() async {
     setState(() => _isLoading = true);
     try {
-      final snapshot = await FirebaseFirestore.instance.collection('instructor_courses').get();
-      _courses = snapshot.docs.map((doc) {
+      final snapshot = await FirebaseFirestore.instance.collection('scheduled_activities').get();
+      _scheduledActivities = snapshot.docs.map((doc) {
         final data = doc.data();
         return {
           'id': doc.id,
+          'courseId': data['courseId'] ?? '',
           'courseName': data['courseName'] ?? 'Unnamed Course',
           'courseCode': data['courseCode'] ?? '',
           'instructorName': data['instructorName'] ?? '',
+          'activityType': data['activityType'] ?? '',
+          'scheduledDate': data['scheduledDate']?.toDate(),
+          'status': data['status'] ?? 'scheduled',
         };
       }).toList();
 
-      _filteredCourses = List.from(_courses);
+      _filteredActivities = List.from(_scheduledActivities);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading courses: $e')),
+          SnackBar(content: Text('Error loading scheduled activities: $e')),
         );
       }
     } finally {
@@ -65,14 +69,15 @@ class _AdminAttendanceReportsPageState extends State<AdminAttendanceReportsPage>
 
 
 
-  void _filterCourses(String query) {
+  void _filterActivities(String query) {
     setState(() {
       if (query.isEmpty) {
-        _filteredCourses = List.from(_courses);
+        _filteredActivities = List.from(_scheduledActivities);
       } else {
-        _filteredCourses = _courses.where((course) =>
-          course['courseName'].toString().toLowerCase().contains(query.toLowerCase()) ||
-          course['courseCode'].toString().toLowerCase().contains(query.toLowerCase())
+        _filteredActivities = _scheduledActivities.where((activity) =>
+          activity['courseName'].toString().toLowerCase().contains(query.toLowerCase()) ||
+          activity['courseCode'].toString().toLowerCase().contains(query.toLowerCase()) ||
+          activity['instructorName'].toString().toLowerCase().contains(query.toLowerCase())
         ).toList();
       }
     });
@@ -111,31 +116,31 @@ class _AdminAttendanceReportsPageState extends State<AdminAttendanceReportsPage>
                   TextField(
                     controller: _searchController,
                     decoration: const InputDecoration(
-                      labelText: 'Search by Course Name or Code',
+                      labelText: 'Search by Course Name, Code, or Instructor',
                       prefixIcon: Icon(Icons.search),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Course List
+                  // Activities List
                   Expanded(
                     child: ListView.builder(
-                      itemCount: _filteredCourses.length,
+                      itemCount: _filteredActivities.length,
                       itemBuilder: (context, index) {
-                        final course = _filteredCourses[index];
+                        final activity = _filteredActivities[index];
                         return Card(
                           child: ListTile(
-                            title: Text(course['courseName']),
-                            subtitle: Text('Code: ${course['courseCode']} | Instructor: ${course['instructorName']}'),
+                            title: Text(activity['courseName']),
+                            subtitle: Text('Code: ${activity['courseCode']} | Instructor: ${activity['instructorName']} | Type: ${activity['activityType']}'),
                             trailing: ElevatedButton(
                               onPressed: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => AdminReportPage(
-                                      courseId: course['id'],
-                                      courseName: course['courseName'],
-                                      courseCode: course['courseCode'],
-                                      instructorName: course['instructorName'],
+                                      courseId: activity['courseId'],
+                                      courseName: activity['courseName'],
+                                      courseCode: activity['courseCode'],
+                                      instructorName: activity['instructorName'],
                                       reportType: _selectedReportType,
                                     ),
                                   ),

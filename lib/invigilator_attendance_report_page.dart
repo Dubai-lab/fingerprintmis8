@@ -15,10 +15,10 @@ class InvigilatorAttendanceReportPage extends StatefulWidget {
 
 class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceReportPage> {
   String? _selectedActivity;
-  String? _selectedCourseId;
+  String? _selectedScheduledActivityId;
 
   List<String> _activities = ['CAT', 'EXAM', 'CONFERENCE'];
-  List<Map<String, dynamic>> _courses = [];
+  List<Map<String, dynamic>> _scheduledActivities = [];
 
   List<Map<String, dynamic>> _attendanceRecords = [];
   bool _loading = false;
@@ -28,45 +28,44 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
   void initState() {
     super.initState();
     _selectedActivity = _activities.first;
-    _loadCourses();
+    _loadScheduledActivities();
     _fetchAttendanceRecords();
   }
 
-  Future<void> _loadCourses() async {
+  Future<void> _loadScheduledActivities() async {
     try {
-      final now = DateTime.now();
-      final querySnapshot = await FirebaseFirestore.instance.collection('instructor_courses').get();
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('scheduled_activities')
+          .get();
 
-      final validCourses = querySnapshot.docs.where((doc) {
+      final activities = querySnapshot.docs.map((doc) {
         final data = doc.data();
-        final endDate = data['endDate'] as Timestamp?;
-        // If endDate is null, we'll still show the course
-        // Otherwise, only show if endDate is in the future
-        return endDate == null || endDate.toDate().isAfter(now);
+        return {
+          'id': doc.id,
+          'courseId': data['courseId'] ?? '',
+          'courseName': data['courseName'] ?? '',
+          'activityType': data['activityType'] ?? '',
+          'scheduledDate': data['scheduledDate']?.toDate(),
+          'status': data['status'] ?? 'scheduled',
+        };
       }).toList();
 
       setState(() {
-        _courses = validCourses.map((doc) {
-          final data = doc.data();
-          return {
-            'id': doc.id,
-            'name': data['courseName'] ?? 'Unnamed Course',
-          };
-        }).toList();
-        if (_courses.isNotEmpty) {
-          _selectedCourseId = _courses.first['id'];
+        _scheduledActivities = activities;
+        if (_scheduledActivities.isNotEmpty) {
+          _selectedScheduledActivityId = _scheduledActivities.first['id'];
         }
       });
     } catch (e) {
       setState(() {
-        _status = 'Failed to load courses: $e';
+        _status = 'Failed to load scheduled activities: $e';
       });
     }
   }
 
   Future<void> _fetchAttendanceRecords() async {
     if (_selectedActivity == null) return;
-    if ((_selectedActivity == 'CAT' || _selectedActivity == 'EXAM') && _selectedCourseId == null) return;
+    if ((_selectedActivity == 'CAT' || _selectedActivity == 'EXAM') && _selectedScheduledActivityId == null) return;
 
     setState(() {
       _loading = true;
@@ -81,7 +80,12 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
           .collection('attendance');
 
       if (_selectedActivity == 'CAT' || _selectedActivity == 'EXAM') {
-        query = query.where('courseId', isEqualTo: _selectedCourseId);
+        // Get the courseId from the selected scheduled activity
+        final selectedActivity = _scheduledActivities.firstWhere(
+          (activity) => activity['id'] == _selectedScheduledActivityId,
+        );
+        final courseId = selectedActivity['courseId'];
+        query = query.where('courseId', isEqualTo: courseId);
       }
 
       final querySnapshot = await query.orderBy('timestamp', descending: true).get();
@@ -91,9 +95,9 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
           final data = doc.data();
           String courseId = data['courseId'] ?? '';
           String courseName = '';
-          for (var course in _courses) {
-            if (course['id'] == courseId) {
-              courseName = course['name'];
+          for (var activity in _scheduledActivities) {
+            if (activity['courseId'] == courseId) {
+              courseName = activity['courseName'];
               break;
             }
           }
@@ -334,9 +338,9 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
                 setState(() {
                   _selectedActivity = value;
                   if (_selectedActivity == 'CONFERENCE') {
-                    _selectedCourseId = null;
-                  } else if (_courses.isNotEmpty) {
-                    _selectedCourseId = _courses.first['id'];
+                    _selectedScheduledActivityId = null;
+                  } else if (_scheduledActivities.isNotEmpty) {
+                    _selectedScheduledActivityId = _scheduledActivities.first['id'];
                   }
                 });
                 _fetchAttendanceRecords();
@@ -345,20 +349,22 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
             if (_selectedActivity == 'CAT' || _selectedActivity == 'EXAM')
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(
-                  labelText: 'Select Course',
+                  labelText: 'Select Scheduled Activity',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                value: _selectedCourseId,
-                items: _courses.map((course) {
+                value: _selectedScheduledActivityId,
+                items: _scheduledActivities
+                    .where((activity) => activity['activityType'] == _selectedActivity)
+                    .map((activity) {
                   return DropdownMenuItem<String>(
-                    value: course['id'],
-                    child: Text(course['name']),
+                    value: activity['id'],
+                    child: Text('${activity['courseName']}'),
                   );
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    _selectedCourseId = value;
+                    _selectedScheduledActivityId = value;
                   });
                   _fetchAttendanceRecords();
                 },

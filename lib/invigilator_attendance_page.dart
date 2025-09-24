@@ -23,9 +23,11 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
   String? _selectedActivity;
   String? _selectedCourseId;
   DateTime? _selectedConferenceDate;
+  String? _selectedScheduledActivityId;
 
   List<String> _activities = ['CAT', 'EXAM', 'CONFERENCE'];
   List<Map<String, dynamic>> _courses = [];
+  List<Map<String, dynamic>> _scheduledActivities = [];
 
   Map<String, String> _students = {}; // regNumber -> base64 fingerprint template
 
@@ -54,7 +56,7 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
       }
     });
     _loadActivities();
-    _loadCourses();
+    _loadScheduledActivities();
     _loadRegisteredStudents();
   }
 
@@ -114,6 +116,79 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
     } catch (e) {
       setState(() {
         _status = 'Failed to load courses: $e';
+      });
+    }
+  }
+
+  Future<void> _loadScheduledActivities() async {
+    try {
+      final now = DateTime.now();
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('scheduled_activities')
+          .where('status', isEqualTo: 'scheduled')
+          .get();
+
+      final activities = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'courseId': data['courseId'] ?? '',
+          'courseName': data['courseName'] ?? '',
+          'activityType': data['activityType'] ?? '',
+          'scheduledDate': data['scheduledDate']?.toDate(),
+          'startTime': data['startTime'] ?? '',
+          'endTime': data['endTime'] ?? '',
+          'status': data['status'] ?? 'scheduled',
+        };
+      }).toList();
+
+      // Filter out activities that are past their end time
+      final availableActivities = activities.where((activity) {
+        if (activity['endTime'].isEmpty) return true; // No end time set, keep it
+
+        try {
+          final scheduledDate = activity['scheduledDate'];
+          final endTime = activity['endTime'];
+
+          if (scheduledDate == null || endTime.isEmpty) return true;
+
+          // Parse end time (format: "HH:mm")
+          final timeParts = endTime.split(':');
+          if (timeParts.length != 2) return true;
+
+          final endHour = int.parse(timeParts[0]);
+          final endMinute = int.parse(timeParts[1]);
+
+          // Create end date time
+          final endDateTime = DateTime(
+            scheduledDate.year,
+            scheduledDate.month,
+            scheduledDate.day,
+            endHour,
+            endMinute,
+          );
+
+          // Keep activity if current time is before or at end time
+          return now.isBefore(endDateTime) || now.isAtSameMomentAs(endDateTime);
+        } catch (e) {
+          // If there's an error parsing time, keep the activity
+          return true;
+        }
+      }).toList();
+
+      setState(() {
+        _scheduledActivities = availableActivities;
+        if (_scheduledActivities.isNotEmpty) {
+          _selectedScheduledActivityId = _scheduledActivities.first['id'];
+          _selectedCourseId = _scheduledActivities.first['courseId'];
+        } else {
+          _selectedScheduledActivityId = null;
+          _selectedCourseId = null;
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _status = 'Failed to load scheduled activities: $e';
       });
     }
   }
@@ -208,9 +283,9 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
         final sanitizedRegNumber = bestMatchRegNumber.replaceAll('/', '_');
 
         if (_selectedActivity == 'CAT' || _selectedActivity == 'EXAM') {
-          if (_selectedCourseId == null) {
+          if (_selectedScheduledActivityId == null) {
             setState(() {
-              _status = 'Please select a course for CAT or EXAM attendance.';
+              _status = 'Please select a scheduled activity for CAT or EXAM attendance.';
               _scanning = false;
             });
             return;
@@ -262,10 +337,22 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
             'conferenceDate': _selectedConferenceDate,
         });
 
+        // Note: Activity status is managed by admin, not automatically updated by attendance
+
         setState(() {
           _status = 'Attendance marked Present for $bestMatchRegNumber (score: $bestScore) for $_selectedActivity';
           _scanning = false;
         });
+
+        // Note: Activities remain available for multiple student attendance
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Attendance marked successfully for $bestMatchRegNumber'),
+            backgroundColor: Colors.green,
+          ),
+        );
       } catch (e) {
         setState(() {
           _status = 'Failed to mark attendance: $e';
@@ -331,10 +418,11 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
                   _selectedActivity = value;
                   if (_selectedActivity == 'CONFERENCE') {
                     _selectedCourseId = null;
+                    _selectedScheduledActivityId = null;
                   }
                 });
                 if (_selectedActivity != 'CONFERENCE') {
-                  await _loadCourses();
+                  await _loadScheduledActivities();
                 }
               },
             ),
@@ -379,20 +467,26 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
             if (_selectedActivity != 'CONFERENCE')
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(
-                  labelText: 'Select Course',
+                  labelText: 'Select Scheduled Activity',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-                value: _selectedCourseId,
-                items: _courses.map((course) {
+                value: _selectedScheduledActivityId,
+                items: _scheduledActivities
+                    .where((activity) => activity['activityType'] == _selectedActivity)
+                    .map((activity) {
                   return DropdownMenuItem<String>(
-                    value: course['id'],
-                    child: Text(course['name']),
+                    value: activity['id'],
+                    child: Text('${activity['courseName']}'),
                   );
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
-                    _selectedCourseId = value;
+                    _selectedScheduledActivityId = value;
+                    final selectedActivity = _scheduledActivities.firstWhere(
+                      (activity) => activity['id'] == value,
+                    );
+                    _selectedCourseId = selectedActivity['courseId'];
                   });
                 },
               ),
@@ -433,7 +527,7 @@ class _InvigilatorAttendancePageState extends State<InvigilatorAttendancePage> {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: _scanning || (_selectedActivity == 'CONFERENCE' && _selectedConferenceDate == null) ? null : _startScanning,
+              onPressed: _scanning || (_selectedActivity == 'CONFERENCE' && _selectedConferenceDate == null) || (_selectedActivity != 'CONFERENCE' && _selectedScheduledActivityId == null) ? null : _startScanning,
               child: Text(
                 _scanning ? 'Scanning...' : 'Start Scanning',
                 style: TextStyle(fontSize: 18),

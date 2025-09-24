@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fingerprintmis8/activity_page.dart';
 import 'package:fingerprintmis8/admin_attendance_reports_page.dart';
 import 'package:fingerprintmis8/admin_registration_page.dart';
 import 'package:fingerprintmis8/join_students_page.dart';
@@ -12,6 +13,7 @@ import 'package:fingerprintmis8/create_courses_page.dart';
 import 'package:fingerprintmis8/student_verification_page.dart';
 import 'admin_dashboard_chart.dart';
 import 'package:fingerprintmis8/auth/registeration_page.dart';
+import 'package:fingerprintmis8/manage_scheduled_activities_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({Key? key}) : super(key: key);
@@ -172,7 +174,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               },
             ),
                   ListTile(
-                    leading: Icon(Icons.group),
+                    leading: Icon(Icons.group, color: Colors.deepPurple),
                     title: Text('User Management'),
                     onTap: () {
                       Navigator.pop(context);
@@ -180,7 +182,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     },
                   ),
                   ListTile(
-                    leading: Icon(Icons.verified_user),
+                    leading: Icon(Icons.verified_user, color: Colors.deepPurple),
                     title: Text('Student Verification'),
                     onTap: () {
                       Navigator.pop(context);
@@ -191,7 +193,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     },
                   ),
                   ListTile(
-                    leading: Icon(Icons.book),
+                    leading: Icon(Icons.book, color: Colors.deepPurple),
                     title: Text('Create Course'),
                     onTap: () {
                       Navigator.pop(context);
@@ -202,7 +204,29 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     },
                   ),
                   ListTile(
-                    leading: Icon(Icons.group_add),
+                    leading: Icon(Icons.book, color: Colors.deepPurple),
+                    title: Text('Schedule Activity'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ActivityPage()),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.schedule, color: Colors.deepPurple),
+                    title: Text('Manage Scheduled Activities'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ManageScheduledActivitiesPage()),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.group_add, color: Colors.deepPurple),
                     title: Text('Join Students'),
                     onTap: () {
                       Navigator.pop(context);
@@ -213,7 +237,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     },
                   ),
                   ListTile(
-                    leading: Icon(Icons.group),
+                    leading: Icon(Icons.group, color: Colors.deepPurple),
                     title: Text('Joined Students'),
                     onTap: () {
                       Navigator.pop(context);
@@ -224,7 +248,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     },
                   ),
                    ListTile(
-              leading: Icon(Icons.book),
+              leading: Icon(Icons.book, color: Colors.deepPurple),
               title: Text('Manage Courses'),
               onTap: () {
                 Navigator.pop(context);
