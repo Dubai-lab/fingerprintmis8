@@ -15,6 +15,7 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
   List<String> _selectedStudentIds = [];
   String _searchRegNumber = '';
   String? _courseDepartment;
+  bool _isUnenrollMode = false; // Toggle between enroll and unenroll modes
 
   Future<List<String>> _getJoinedStudentIds() async {
     if (_selectedCourseId == null) return [];
@@ -95,6 +96,49 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
               },
             ),
             SizedBox(height: 16),
+            // Mode toggle buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _isUnenrollMode = false;
+                        _selectedStudentIds.clear();
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: !_isUnenrollMode ? Colors.deepPurple : Colors.grey[300],
+                      foregroundColor: !_isUnenrollMode ? Colors.white : Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text('Enroll Students'),
+                  ),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _isUnenrollMode = true;
+                        _selectedStudentIds.clear();
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _isUnenrollMode ? Colors.red : Colors.grey[300],
+                      foregroundColor: _isUnenrollMode ? Colors.white : Colors.black,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text('Unenroll Students'),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
             // Search field
             TextField(
               decoration: InputDecoration(
@@ -131,8 +175,14 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
                         final regNumber = student['regNumber'] ?? '';
                         final department = student['department'] ?? '';
                         final matchesSearch = _searchRegNumber.isEmpty || regNumber.contains(_searchRegNumber);
-                        final notJoined = !joinedStudentIds.contains(studentId);
-                        return matchesSearch && notJoined;
+
+                        // In enroll mode: show students NOT joined
+                        // In unenroll mode: show students who ARE joined
+                        final shouldShow = _isUnenrollMode
+                            ? joinedStudentIds.contains(studentId)
+                            : !joinedStudentIds.contains(studentId);
+
+                        return matchesSearch && shouldShow;
                       }).toList();
 
                       // Filter students by selected course's department
@@ -182,13 +232,18 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
             ),
             SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _selectedCourseId != null && _selectedStudentIds.isNotEmpty ? _joinStudents : null,
+              onPressed: _selectedCourseId != null && _selectedStudentIds.isNotEmpty
+                  ? (_isUnenrollMode ? _unenrollStudents : _joinStudents)
+                  : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: _isUnenrollMode ? Colors.red : Colors.deepPurple,
                 minimumSize: Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: Text('Join Students to Course', style: TextStyle(fontSize: 18, color: Colors.white)),
+              child: Text(
+                _isUnenrollMode ? 'Unenroll Students from Course' : 'Join Students to Course',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
             ),
           ],
         ),
@@ -221,6 +276,35 @@ class _JoinStudentsPageState extends State<JoinStudentsPage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to join students: $e')),
+      );
+    }
+  }
+
+  Future<void> _unenrollStudents() async {
+    if (_selectedCourseId == null || _selectedStudentIds.isEmpty) return;
+
+    try {
+      final batch = _firestore.batch();
+      final courseRef = _firestore.collection('instructor_courses').doc(_selectedCourseId);
+
+      for (final studentId in _selectedStudentIds) {
+        final studentCourseRef = courseRef.collection('students').doc(studentId);
+        batch.delete(studentCourseRef);
+      }
+
+      await batch.commit();
+
+      setState(() {
+        _selectedStudentIds.clear();
+        _selectedCourseId = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Students unenrolled from course successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to unenroll students: $e')),
       );
     }
   }
