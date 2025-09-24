@@ -24,6 +24,7 @@ import 'user_profile_page.dart';
 import 'settings_page.dart';
 import 'change_user_password_page.dart';
 import 'admin_attendance_reports_page.dart';
+import 'students/dashboard.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +71,7 @@ class MyApp extends StatelessWidget {
         '/settings': (context) => const SettingsPage(),
         '/change_user_password': (context) => ChangeUserPasswordPage(),
         '/admin_attendance_reports': (context) => const AdminAttendanceReportsPage(),
+        '/student_dashboard': (context) => const StudentDashboard(),
       },
     );
   }
