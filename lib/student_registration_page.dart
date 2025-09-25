@@ -11,10 +11,35 @@ class _StudentRegistrationPageState extends State<StudentRegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _regNumberController = TextEditingController();
-  final TextEditingController _departmentController = TextEditingController();
 
   String _status = 'Idle';
   String? _fingerprintTemplateBase64;
+  String? _selectedDepartment;
+  List<String> _departments = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDepartments();
+  }
+
+  Future<void> _loadDepartments() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance.collection('departments').get();
+      final departments = querySnapshot.docs
+          .map((doc) => doc.data()['name'] as String?)
+          .whereType<String>()
+          .toList();
+      departments.sort();
+      setState(() {
+        _departments = departments;
+      });
+    } catch (e) {
+      setState(() {
+        _status = 'Failed to load departments: $e';
+      });
+    }
+  }
 
   Future<void> _navigateToFingerprintCapture() async {
     final result = await Navigator.pushNamed(context, '/fingerprint_enrollment');
@@ -46,14 +71,14 @@ class _StudentRegistrationPageState extends State<StudentRegistrationPage> {
       await FirebaseFirestore.instance.collection('students').doc(sanitizedRegNumber).set({
         'name': name,
         'regNumber': regNumber,
-        'department': _departmentController.text.trim(),
+        'department': _selectedDepartment ?? '',
         'fingerprintTemplate': _fingerprintTemplateBase64,
       });
       setState(() {
         _status = 'Student registered successfully';
         _nameController.clear();
         _regNumberController.clear();
-        _departmentController.clear();
+        _selectedDepartment = null;
         _fingerprintTemplateBase64 = null;
       });
     } catch (e) {
@@ -150,8 +175,9 @@ class _StudentRegistrationPageState extends State<StudentRegistrationPage> {
                         },
                       ),
                       SizedBox(height: 16),
-                      TextFormField(
-                        controller: _departmentController,
+                      DropdownButtonFormField<String>(
+                        value: _selectedDepartment,
+                        isExpanded: true,
                         decoration: InputDecoration(
                           labelText: 'Department',
                           border: OutlineInputBorder(
@@ -159,8 +185,19 @@ class _StudentRegistrationPageState extends State<StudentRegistrationPage> {
                           ),
                           prefixIcon: Icon(Icons.school, color: Colors.deepPurple),
                         ),
+                        items: _departments
+                            .map((dept) => DropdownMenuItem<String>(
+                                  value: dept,
+                                  child: Text(dept),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedDepartment = value;
+                          });
+                        },
                         validator: (value) =>
-                            value == null || value.isEmpty ? 'Enter department' : null,
+                            value == null || value.isEmpty ? 'Select a department' : null,
                       ),
                       SizedBox(height: 20),
                       ElevatedButton(

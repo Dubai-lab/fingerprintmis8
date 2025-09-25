@@ -25,11 +25,10 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
 
   Future<void> _loadDepartments() async {
     try {
-      final querySnapshot = await FirebaseFirestore.instance.collection('students').get();
+      final querySnapshot = await FirebaseFirestore.instance.collection('departments').get();
       final departments = querySnapshot.docs
-          .map((doc) => doc.data()['department'] as String?)
+          .map((doc) => doc.data()['name'] as String?)
           .whereType<String>()
-          .toSet()
           .toList();
       departments.sort(); // Sort alphabetically
       setState(() {
@@ -189,6 +188,7 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
                     SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       value: _selectedInstructorId,
+                      isExpanded: true,
                       decoration: InputDecoration(
                         labelText: 'Instructor',
                         border: OutlineInputBorder(
@@ -210,6 +210,7 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
                     SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       value: _selectedDepartment,
+                      isExpanded: true,
                       decoration: InputDecoration(
                         labelText: 'Department',
                         border: OutlineInputBorder(

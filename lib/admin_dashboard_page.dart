@@ -14,6 +14,7 @@ import 'package:fingerprintmis8/student_verification_page.dart';
 import 'admin_dashboard_chart.dart';
 import 'package:fingerprintmis8/auth/registeration_page.dart';
 import 'package:fingerprintmis8/manage_scheduled_activities_page.dart';
+import 'package:fingerprintmis8/manage_departments_page.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({Key? key}) : super(key: key);
@@ -433,6 +434,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (context) => JoinStudentsPage()),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: buttonWidth,
+                            child: ElevatedButton.icon(
+                              icon: Icon(Icons.group_add),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text('Manage Departments'),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => ManageDepartmentsPage()),
                                 );
                               },
                             ),
