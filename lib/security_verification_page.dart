@@ -13,13 +13,15 @@ class SecurityVerificationPage extends StatefulWidget {
 class _SecurityVerificationPageState extends State<SecurityVerificationPage> {
   final FingerprintSdk _fingerprintSdk = FingerprintSdk();
 
+  static const int MATCH_THRESHOLD = 80; // Professional threshold
+
   String _status = 'Idle';
   bool _deviceOpened = false;
   bool _scanning = false;
   Uint8List? _currentTemplate;
 
-  Map<String, Map<String, dynamic>> _students = {}; // regNumber -> student data
-  Map<String, String> _studentTemplates = {}; // regNumber -> base64 fingerprint template
+  Map<String, Map<String, dynamic>> _students = {};
+  Map<String, String> _studentTemplates = {};
 
   Map<String, dynamic>? _matchedStudent;
 
@@ -140,16 +142,36 @@ class _SecurityVerificationPageState extends State<SecurityVerificationPage> {
       }
     }
 
-    if (bestScore > 40 && bestMatchRegNumber != null) {
+    if (bestScore >= MATCH_THRESHOLD && bestMatchRegNumber != null) {
       setState(() {
         _matchedStudent = _students[bestMatchRegNumber];
-        _status = 'Match found: ${_matchedStudent?['name']} (score: $bestScore)';
+        _status = '✅ Match found: ${_matchedStudent?['name']} (score: $bestScore)';
       });
+      
+      // Record verification to database
+      _recordVerification(bestMatchRegNumber, bestScore);
     } else {
       setState(() {
         _matchedStudent = null;
-        _status = 'No match found';
+        _status = bestScore >= 0
+            ? '❌ Weak match (Score: $bestScore) - Threshold is $MATCH_THRESHOLD'
+            : '❌ No fingerprint recognized';
       });
+    }
+  }
+
+  Future<void> _recordVerification(String regNumber, int score) async {
+    try {
+      await FirebaseFirestore.instance.collection('security_verifications').add({
+        'regNumber': regNumber,
+        'studentName': _matchedStudent?['name'] ?? 'Unknown',
+        'timestamp': FieldValue.serverTimestamp(),
+        'matchScore': score,
+        'status': 'VERIFIED',
+      });
+      print('Verification recorded successfully');
+    } catch (e) {
+      print('Error recording verification: $e');
     }
   }
 
@@ -161,10 +183,9 @@ class _SecurityVerificationPageState extends State<SecurityVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Security Verification'),
+        title: Text('Student Security Verification'),
         backgroundColor: Colors.deepPurple,
         centerTitle: true,
         elevation: 4,
@@ -188,107 +209,325 @@ class _SecurityVerificationPageState extends State<SecurityVerificationPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Icon(
-                Icons.fingerprint,
-                size: 140,
-                color: _deviceOpened ? Colors.green : Colors.red,
-              ),
-              SizedBox(height: 24),
-              Text(
-                'Status:',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-              ),
-              SizedBox(height: 8),
-              Text(
-                _status,
-                style: TextStyle(fontSize: 18, color: Colors.black87),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 32),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.45),
-                        child: ElevatedButton.icon(
-                          icon: Icon(Icons.usb),
-                          label: Text('Open Device', style: TextStyle(color: Colors.white)),
-                          onPressed: _deviceOpened ? null : _openDevice,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
-                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                            textStyle: TextStyle(fontSize: 16, color: Colors.white),
+              // ============ DEVICE STATUS ============
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _deviceOpened ? Colors.green.shade50 : Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _deviceOpened ? Colors.green : Colors.red,
+                    width: 2,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _deviceOpened ? Icons.verified : Icons.close,
+                      size: 32,
+                      color: _deviceOpened ? Colors.green : Colors.red,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _deviceOpened ? 'Device: Connected' : 'Device: Disconnected',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: _deviceOpened ? Colors.green.shade700 : Colors.red.shade700,
+                            ),
                           ),
-                        ),
-                      ),
-                      SizedBox(width: 16),
-                      ConstrainedBox(
-                        constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.45),
-                        child: ElevatedButton.icon(
-                          icon: Icon(Icons.usb_off, color: Colors.white),
-                          label: Text('Close Device', style: TextStyle(color: Colors.white)),
-                          onPressed: !_deviceOpened ? null : _closeDevice,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
-                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                            textStyle: TextStyle(fontSize: 16),
+                          SizedBox(height: 4),
+                          Text(
+                            _deviceOpened ? 'Fingerprint scanner ready' : 'Please open device',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  );
-                },
-              ),
-              SizedBox(height: 40),
-              ElevatedButton.icon(
-                icon: Icon(Icons.fingerprint),
-                label: Text('Scan Fingerprint', style: TextStyle(color: Colors.white)),
-                onPressed: (_deviceOpened && !_scanning) ? _startScanning : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  textStyle: TextStyle(fontSize: 16),
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: 40),
-              _matchedStudent != null
-                  ? Card(
-                      elevation: 6,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      color: theme.colorScheme.primary.withOpacity(0.15),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Name: ${_matchedStudent?['name'] ?? ''}',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Registration Number: ${_matchedStudent?['regNumber'] ?? ''}',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Department: ${_matchedStudent?['department'] ?? 'N/A'}',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          ],
+
+              SizedBox(height: 32),
+
+              // ============ FINGERPRINT ICON ============
+              Icon(
+                Icons.fingerprint,
+                size: 120,
+                color: _deviceOpened ? Colors.deepPurple : Colors.grey,
+              ),
+
+              SizedBox(height: 24),
+
+              // ============ STATUS CARD ============
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Status:',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
                         ),
                       ),
-                    )
-                  : Text(
-                      'No student matched',
-                      style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic, color: const Color.fromARGB(255, 8, 8, 8)),
+                      SizedBox(height: 8),
+                      Text(
+                        _status,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: _status.contains('✅') ? Colors.green :
+                                 _status.contains('❌') ? Colors.red :
+                                 Colors.deepPurple,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 32),
+
+              // ============ DEVICE CONTROL BUTTONS ============
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 150),
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.usb),
+                      label: Text('Open', style: TextStyle(color: Colors.white)),
+                      onPressed: _deviceOpened ? null : _openDevice,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        disabledBackgroundColor: Colors.grey,
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
                     ),
+                  ),
+                  SizedBox(width: 16),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 150),
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.usb_off, color: Colors.white),
+                      label: Text('Close', style: TextStyle(color: Colors.white)),
+                      onPressed: !_deviceOpened ? null : _closeDevice,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        disabledBackgroundColor: Colors.grey,
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 24),
+
+              // ============ SCAN BUTTON ============
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: Icon(Icons.fingerprint),
+                  label: Text(
+                    _scanning ? 'Scanning...' : 'Scan Fingerprint',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  onPressed: (_deviceOpened && !_scanning) ? _startScanning : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    disabledBackgroundColor: Colors.grey,
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 40),
+
+              // ============ STUDENT INFO CARD ============
+              if (_matchedStudent != null)
+                _buildStudentCard(_matchedStudent!)
+              else
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  color: Colors.grey.shade50,
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Icon(Icons.person_outline, size: 48, color: Colors.grey),
+                        SizedBox(height: 12),
+                        Text(
+                          'No student verified yet',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Open device and scan fingerprint',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStudentCard(Map<String, dynamic> student) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [Colors.deepPurple.shade50, Colors.white],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(Icons.verified_user, size: 40, color: Colors.deepPurple),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        student['name'] ?? 'Unknown',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      Text(
+                        'Reg: ${student['regNumber'] ?? ''}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 16),
+            Divider(),
+            SizedBox(height: 16),
+
+            // Student Information
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildDetailChip(
+                  Icons.apartment,
+                  'Department',
+                  student['department'] ?? 'N/A',
+                  Colors.blue,
+                ),
+                _buildDetailChip(
+                  Icons.schedule,
+                  'Session',
+                  student['session'] ?? 'N/A',
+                  Colors.orange,
+                ),
+              ],
+            ),
+
+            SizedBox(height: 16),
+
+            // Verification Status
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green, width: 2),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.done_all, color: Colors.green, size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    'Student Verified',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailChip(IconData icon, String label, String value, Color color) {
+    return Column(
+      children: [
+        Icon(icon, size: 28, color: color),
+        SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

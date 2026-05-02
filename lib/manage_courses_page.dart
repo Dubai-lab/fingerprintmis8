@@ -70,6 +70,10 @@ class _ManageCoursesPageState extends State<ManageCoursesPage> {
       builder: (context) {
         final startDate = (course['startDate'] as Timestamp?)?.toDate();
         final endDate = (course['endDate'] as Timestamp?)?.toDate();
+        final registrationDeadline = (course['registrationDeadline'] as Timestamp?)?.toDate();
+        final registrationPeriodDays = course['registrationPeriodDays'] ?? 'Not Set';
+        final credits = course['creditHours'] ?? 0;
+        final totalDays = course['totalDays'] ?? 0;
         return AlertDialog(
           title: Text('Course Details'),
           content: Column(
@@ -77,10 +81,24 @@ class _ManageCoursesPageState extends State<ManageCoursesPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Course Name: ${course['courseName'] ?? ''}'),
+              SizedBox(height: 8),
               Text('Session: ${course['session'] ?? ''}'),
+              SizedBox(height: 8),
+              Text('Credits: $credits'),
+              SizedBox(height: 8),
+              Text('Total Days: $totalDays'),
+              SizedBox(height: 8),
               Text('Instructor: ${course['instructorName'] ?? course['instructorId'] ?? ''}'),
+              SizedBox(height: 8),
               Text('Start Date: ${startDate != null ? startDate.toLocal().toString().split(" ")[0] : 'N/A'}'),
+              SizedBox(height: 8),
               Text('End Date: ${endDate != null ? endDate.toLocal().toString().split(" ")[0] : 'N/A'}'),
+              SizedBox(height: 8),
+              Divider(),
+              SizedBox(height: 8),
+              Text('Registration Period: $registrationPeriodDays days', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+              SizedBox(height: 8),
+              Text('Registration Deadline: ${registrationDeadline != null ? registrationDeadline.toLocal().toString().split(" ")[0] : 'Not Set'}'),
             ],
           ),
           actions: [
@@ -141,11 +159,12 @@ class _ManageCoursesPageState extends State<ManageCoursesPage> {
               itemCount: _filteredCourses.length,
               itemBuilder: (context, index) {
                 final course = _filteredCourses[index];
+                final credits = course['creditHours'] ?? 0;
                 return Card(
                   margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   child: ListTile(
                     title: Text(course['courseName'] ?? ''),
-                    subtitle: Text('Session: ${course['session'] ?? ''}'),
+                    subtitle: Text('Session: ${course['session'] ?? ''} | Credits: $credits'),
                     trailing: PopupMenuButton<String>(
                       onSelected: (value) {
                         if (value == 'view') {
@@ -183,10 +202,13 @@ class EditCoursePage extends StatefulWidget {
 class _EditCoursePageState extends State<EditCoursePage> {
   late TextEditingController _courseNameController;
   late String _selectedSession;
+  late int _selectedCredits;
+  late int _selectedRegistrationPeriodDays;
   String? _selectedInstructorId;
   List<Map<String, dynamic>> _instructors = [];
   DateTime? _startDate;
   DateTime? _endDate;
+  DateTime? _registrationDeadline;
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -195,8 +217,11 @@ class _EditCoursePageState extends State<EditCoursePage> {
     super.initState();
     _courseNameController = TextEditingController(text: widget.course['courseName'] ?? '');
     _selectedSession = widget.course['session'] ?? 'Day';
+    _selectedCredits = widget.course['creditHours'] ?? 10;
+    _selectedRegistrationPeriodDays = widget.course['registrationPeriodDays'] ?? 3;
     _startDate = (widget.course['startDate'] as Timestamp?)?.toDate();
     _endDate = (widget.course['endDate'] as Timestamp?)?.toDate();
+    _registrationDeadline = (widget.course['registrationDeadline'] as Timestamp?)?.toDate();
     _loadInstructors();
   }
 
@@ -225,12 +250,22 @@ class _EditCoursePageState extends State<EditCoursePage> {
     if (courseName.isEmpty || _selectedInstructorId == null || _startDate == null || _endDate == null) return;
 
     try {
+      // Calculate totalDays based on creditHours
+      final totalDays = _selectedCredits;
+      
+      // Calculate registration deadline if not already set
+      final registrationDeadline = _registrationDeadline ?? _startDate!.subtract(Duration(days: 1));
+      
       await _firestore.collection('instructor_courses').doc(widget.course['id']).update({
         'courseName': courseName,
         'session': _selectedSession,
+        'creditHours': _selectedCredits,
+        'totalDays': totalDays,
         'instructorId': _selectedInstructorId,
         'startDate': _startDate,
         'endDate': _endDate,
+        'registrationDeadline': registrationDeadline,
+        'registrationPeriodDays': _selectedRegistrationPeriodDays,
       });
       widget.onSave();
       Navigator.pop(context);
@@ -301,6 +336,50 @@ class _EditCoursePageState extends State<EditCoursePage> {
                   onChanged: (value) {
                     setState(() {
                       _selectedSession = value ?? 'Day';
+                    });
+                  },
+                ),
+                SizedBox(height: 16),
+                DropdownButtonFormField<int>(
+                  value: _selectedCredits,
+                  decoration: InputDecoration(
+                    labelText: 'Credit Hours',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: Icon(Icons.school, color: Colors.deepPurple),
+                  ),
+                  items: [10, 15, 20]
+                      .map<DropdownMenuItem<int>>((credit) => DropdownMenuItem<int>(
+                            value: credit,
+                            child: Text('$credit Credits ($credit Days)'),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCredits = value ?? 10;
+                    });
+                  },
+                ),
+                SizedBox(height: 16),
+                DropdownButtonFormField<int>(
+                  value: _selectedRegistrationPeriodDays,
+                  decoration: InputDecoration(
+                    labelText: 'Registration Period (days)',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: Icon(Icons.schedule, color: Colors.deepPurple),
+                  ),
+                  items: [3, 7, 14, 21, 30]
+                      .map<DropdownMenuItem<int>>((days) => DropdownMenuItem<int>(
+                            value: days,
+                            child: Text('$days days'),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedRegistrationPeriodDays = value ?? 3;
+                      // Recalculate deadline based on new period
+                      if (_registrationDeadline != null && value != null) {
+                        _registrationDeadline = DateTime.now().add(Duration(days: value));
+                      }
                     });
                   },
                 ),

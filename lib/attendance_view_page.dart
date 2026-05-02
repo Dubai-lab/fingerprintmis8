@@ -121,23 +121,61 @@ class _AttendanceViewPageState extends State<AttendanceViewPage> {
 
     if (_selectedCourseId != null && session != null) {
       try {
-        // Query ALL attendance records for this course (no date filtering)
-        final querySnapshot = await FirebaseFirestore.instance
+        // First, get all attendance sessions for this course
+        final sessionsSnapshot = await FirebaseFirestore.instance
             .collection('instructor_courses')
             .doc(_selectedCourseId)
-            .collection('attendance')
-            .orderBy('timestamp', descending: true) // Most recent first
+            .collection('attendance_sessions')
             .get();
 
-        setState(() {
-          _attendanceRecords = querySnapshot.docs.map((doc) {
-            final data = doc.data();
-            return {
+        List<Map<String, dynamic>> allRecords = [];
+
+        // For each attendance session, get all student attendance records
+        for (var sessionDoc in sessionsSnapshot.docs) {
+          final studentsSnapshot = await FirebaseFirestore.instance
+              .collection('instructor_courses')
+              .doc(_selectedCourseId)
+              .collection('attendance_sessions')
+              .doc(sessionDoc.id)
+              .collection('students')
+              .get();
+
+          for (var studentDoc in studentsSnapshot.docs) {
+            final data = studentDoc.data();
+            // Get check-in or check-out time (whichever is latest)
+            final checkInTime = data['checkInTime'] as Timestamp?;
+            final checkOutTime = data['checkOutTime'] as Timestamp?;
+            final timestamp = checkOutTime ?? checkInTime;
+            
+            // Get attendance percentages
+            final checkInPercentage = data['checkInPercentage'] as num? ?? 0.0;
+            final checkOutPercentage = data['checkOutPercentage'] as num? ?? 0.0;
+            final totalDayPercentage = data['totalDayPercentage'] as num? ?? (checkInPercentage + checkOutPercentage);
+
+            allRecords.add({
               'regNumber': data['regNumber'] ?? '',
-              'status': data['status'] ?? '',
-              'timestamp': data['timestamp'],
-            };
-          }).toList();
+              'status': data['status'] ?? 'PRESENT',
+              'checkInTime': checkInTime,
+              'checkOutTime': checkOutTime,
+              'checkInPercentage': checkInPercentage,
+              'checkOutPercentage': checkOutPercentage,
+              'totalDayPercentage': totalDayPercentage,
+              'timestamp': timestamp,
+              'matchScore': data['matchScore'] ?? 0,
+              'matchQuality': data['matchQuality'] ?? 'UNKNOWN',
+            });
+          }
+        }
+
+        // Sort by timestamp (most recent first)
+        allRecords.sort((a, b) {
+          final timestampA = (a['timestamp'] as Timestamp?)?.toDate() ?? DateTime(1970);
+          final timestampB = (b['timestamp'] as Timestamp?)?.toDate() ?? DateTime(1970);
+          return timestampB.compareTo(timestampA);
+        });
+
+        setState(() {
+          _attendanceRecords = allRecords;
           _loadingRecords = false;
           if (_attendanceRecords.isEmpty) {
             _status = 'No attendance records found for selected course and session.';
@@ -201,15 +239,18 @@ class _AttendanceViewPageState extends State<AttendanceViewPage> {
         sessionName = _selectedSession!;
       }
 
-      String csv = 'Course:,$courseName\nSession:,$sessionName\n\nS/N,RegNo.,Attendance,Date\n';
-      for (int i = 0; i < _attendanceRecords.length; i++) {
-        final record = _attendanceRecords[i];
-        final date = _formatTimestamp(record['timestamp']);
-        csv +=
-            '${i + 1},${record['regNumber'] ?? ''},${record['status'] ?? ''},$date\n';
-      }
-
-      // Try to save to Downloads directory first
+        String csv =
+            'Course:,$courseName\nSession:,$sessionName\n\nS/N,RegNo.,Status,Check-In Time,Check-Out Time,Check-In %,Check-Out %,Day Total %\n';
+        for (int i = 0; i < _attendanceRecords.length; i++) {
+          final record = _attendanceRecords[i];
+          final checkIn = _formatTimestamp(record['checkInTime']);
+          final checkOut = _formatTimestamp(record['checkOutTime']);
+          final checkInPct = (record['checkInPercentage'] as num?)?.toStringAsFixed(1) ?? '0.0';
+          final checkOutPct = (record['checkOutPercentage'] as num?)?.toStringAsFixed(1) ?? '0.0';
+          final dayTotalPct = (record['totalDayPercentage'] as num?)?.toStringAsFixed(1) ?? '0.0';
+          csv +=
+              '${i + 1},${record['regNumber'] ?? ''},${record['status'] ?? 'PRESENT'},$checkIn,$checkOut,$checkInPct%,$checkOutPct%,$dayTotalPct%\n';
+        }      // Try to save to Downloads directory first
       try {
         final directory = Directory('/storage/emulated/0/Download');
         if (!await directory.exists()) {
@@ -303,12 +344,13 @@ class _AttendanceViewPageState extends State<AttendanceViewPage> {
                 sessionName = _selectedSession!;
               }
 
-              String csv = 'Course:,$courseName\nSession:,$sessionName\n\nS/N,RegNo.,Attendance,Date\n';
+              String csv = 'Course:,$courseName\nSession:,$sessionName\n\nS/N,RegNo.,Status,Check-In Time,Check-Out Time\n';
               for (int i = 0; i < _attendanceRecords.length; i++) {
                 final record = _attendanceRecords[i];
-                final date = _formatTimestamp(record['timestamp']);
+                final checkIn = _formatTimestamp(record['checkInTime']);
+                final checkOut = _formatTimestamp(record['checkOutTime']);
                 csv +=
-                    '${i + 1},${record['regNumber'] ?? ''},${record['status'] ?? ''},$date\n';
+                    '${i + 1},${record['regNumber'] ?? ''},${record['status'] ?? 'PRESENT'},$checkIn,$checkOut\n';
               }
               await _saveToAppDirectory(csv, courseName, sessionName);
             },
@@ -385,8 +427,12 @@ class _AttendanceViewPageState extends State<AttendanceViewPage> {
                               columns: const [
                                 DataColumn(label: Text('S/N')),
                                 DataColumn(label: Text('RegNo.')),
-                                DataColumn(label: Text('Attendance')),
-                                DataColumn(label: Text('Date')),
+                                DataColumn(label: Text('Status')),
+                                DataColumn(label: Text('Check-In')),
+                                DataColumn(label: Text('Check-Out')),
+                                DataColumn(label: Text('Check-In %')),
+                                DataColumn(label: Text('Check-Out %')),
+                                DataColumn(label: Text('Day Total %')),
                               ],
                               rows: List<DataRow>.generate(
                                 _attendanceRecords.length,
@@ -395,8 +441,12 @@ class _AttendanceViewPageState extends State<AttendanceViewPage> {
                                   return DataRow(cells: [
                                     DataCell(Text('${index + 1}')),
                                     DataCell(Text(record['regNumber'] ?? '')),
-                                    DataCell(Text(record['status'] ?? '')),
-                                    DataCell(Text(_formatTimestamp(record['timestamp']))),
+                                    DataCell(Text(record['status'] ?? 'PRESENT')),
+                                    DataCell(Text(_formatTimestamp(record['checkInTime']))),
+                                    DataCell(Text(_formatTimestamp(record['checkOutTime']))),
+                                    DataCell(Text('${(record['checkInPercentage'] as num?)?.toStringAsFixed(1) ?? '0.0'}%')),
+                                    DataCell(Text('${(record['checkOutPercentage'] as num?)?.toStringAsFixed(1) ?? '0.0'}%')),
+                                    DataCell(Text('${(record['totalDayPercentage'] as num?)?.toStringAsFixed(1) ?? '0.0'}%')),
                                   ]);
                                 },
                               ),

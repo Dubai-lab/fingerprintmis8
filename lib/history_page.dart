@@ -41,27 +41,40 @@ class _HistoryPageState extends State<HistoryPage> {
 
       final instructorId = user.uid;
       final now = DateTime.now();
+      
+      // Create a DateTime for the end of today to include courses ending today
+      final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
       // Query only courses taught by current instructor that have ended
+      // NOTE: Sorting done in-memory to avoid requiring composite Firestore index
       final querySnapshot = await FirebaseFirestore.instance
           .collection('instructor_courses')
           .where('instructorId', isEqualTo: instructorId)
-          .where('endDate', isLessThanOrEqualTo: now)
-          .orderBy('endDate', descending: true)
+          .where('endDate', isLessThanOrEqualTo: endOfToday)
           .get();
 
+      final endedCourses = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'courseName': data['courseName'] ?? 'Unnamed Course',
+          'session': data['session'] ?? '',
+          'startDate': (data['startDate'] as Timestamp?)?.toDate(),
+          'endDate': (data['endDate'] as Timestamp?)?.toDate(),
+          'instructorName': data['instructorName'] ?? '',
+        };
+      }).toList();
+
+      // Sort by endDate descending (newest first) in Dart instead of Firestore
+      endedCourses.sort((a, b) {
+        final dateA = a['endDate'] as DateTime?;
+        final dateB = b['endDate'] as DateTime?;
+        if (dateA == null || dateB == null) return 0;
+        return dateB.compareTo(dateA); // descending order
+      });
+
       setState(() {
-        _endedCourses = querySnapshot.docs.map((doc) {
-          final data = doc.data();
-          return {
-            'id': doc.id,
-            'courseName': data['courseName'] ?? 'Unnamed Course',
-            'session': data['session'] ?? '',
-            'startDate': (data['startDate'] as Timestamp?)?.toDate(),
-            'endDate': (data['endDate'] as Timestamp?)?.toDate(),
-            'instructorName': data['instructorName'] ?? '',
-          };
-        }).toList();
+        _endedCourses = endedCourses;
         _loading = false;
       });
     } catch (e) {

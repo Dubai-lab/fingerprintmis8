@@ -56,51 +56,59 @@ class _InstructorAnalyticsPageState extends State<InstructorAnalyticsPage> {
       _monthlySummary.clear();
     });
 
-    // Fetch attendance sessions for the course
-    final sessionsSnapshot = await FirebaseFirestore.instance
-        .collection('attendance_sessions')
-        .where('courseId', isEqualTo: courseId)
-        .get();
+    try {
+      // Fetch all attendance sessions for this course
+      final sessionsSnapshot = await FirebaseFirestore.instance
+          .collection('instructor_courses')
+          .doc(courseId)
+          .collection('attendance_sessions')
+          .get();
 
-    if (sessionsSnapshot.size == 0) {
+      Map<String, List<DateTime>> attendanceDates = {};
+
+      // For each session, get all student attendance records
+      for (var sessionDoc in sessionsSnapshot.docs) {
+        final studentsSnapshot = await FirebaseFirestore.instance
+            .collection('instructor_courses')
+            .doc(courseId)
+            .collection('attendance_sessions')
+            .doc(sessionDoc.id)
+            .collection('students')
+            .get();
+
+        for (var studentDoc in studentsSnapshot.docs) {
+          final data = studentDoc.data();
+          final regNumber = data['regNumber'] ?? '';
+          final checkInTime = (data['checkInTime'] as Timestamp?)?.toDate();
+
+          if (checkInTime != null) {
+            attendanceDates.putIfAbsent(regNumber, () => []).add(checkInTime);
+          }
+        }
+      }
+
+      Map<String, int> weeklySummary = {};
+      Map<String, int> monthlySummary = {};
+
+      for (var dates in attendanceDates.values) {
+        for (var date in dates) {
+          final week = DateFormat('yyyy-ww').format(date);
+          final month = DateFormat('yyyy-MM').format(date);
+          weeklySummary[week] = (weeklySummary[week] ?? 0) + 1;
+          monthlySummary[month] = (monthlySummary[month] ?? 0) + 1;
+        }
+      }
+
+      setState(() {
+        _weeklySummary = weeklySummary;
+        _monthlySummary = monthlySummary;
+        _loading = false;
+      });
+    } catch (e) {
       setState(() {
         _loading = false;
       });
-      return;
     }
-
-    // Fetch attendance records for the course
-    final attendanceSnapshot = await FirebaseFirestore.instance
-        .collection('attendance')
-        .where('courseId', isEqualTo: courseId)
-        .get();
-
-    Map<String, List<DateTime>> attendanceDates = {};
-
-    for (var doc in attendanceSnapshot.docs) {
-      final regNumber = doc['regNumber'] ?? '';
-      final timestamp = (doc['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-
-      attendanceDates.putIfAbsent(regNumber, () => []).add(timestamp);
-    }
-
-    Map<String, int> weeklySummary = {};
-    Map<String, int> monthlySummary = {};
-
-    for (var dates in attendanceDates.values) {
-      for (var date in dates) {
-        final week = DateFormat('yyyy-ww').format(date);
-        final month = DateFormat('yyyy-MM').format(date);
-        weeklySummary[week] = (weeklySummary[week] ?? 0) + 1;
-        monthlySummary[month] = (monthlySummary[month] ?? 0) + 1;
-      }
-    }
-
-    setState(() {
-      _weeklySummary = weeklySummary;
-      _monthlySummary = monthlySummary;
-      _loading = false;
-    });
   }
 
   Widget _buildDropdown() {

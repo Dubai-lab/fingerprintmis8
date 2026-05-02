@@ -9,6 +9,7 @@ class FingerprintSdk {
   final StreamController<String> _statusController = StreamController<String>.broadcast();
   final StreamController<Uint8List> _imageController = StreamController<Uint8List>.broadcast();
   final StreamController<Uint8List> _templateController = StreamController<Uint8List>.broadcast();
+  final StreamController<String> _errorController = StreamController<String>.broadcast();
 
   FingerprintSdk() {
     _channel.setMethodCallHandler(_handleMethodCall);
@@ -17,6 +18,7 @@ class FingerprintSdk {
   Stream<String> get statusStream => _statusController.stream;
   Stream<Uint8List> get imageStream => _imageController.stream;
   Stream<Uint8List> get templateStream => _templateController.stream;
+  Stream<String> get errorStream => _errorController.stream;
 
   Future<void> openDevice() async {
     final bool result = await _channel.invokeMethod('openDevice');
@@ -76,5 +78,6 @@ class FingerprintSdk {
     _statusController.close();
     _imageController.close();
     _templateController.close();
+    _errorController.close();
   }
 }

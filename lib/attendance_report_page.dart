@@ -38,23 +38,51 @@ class _AttendanceReportPageState extends State<AttendanceReportPage> {
     });
 
     try {
-      // Fetch all attendance records for this course
-      final querySnapshot = await FirebaseFirestore.instance
+      // Fetch all attendance sessions for this course
+      final sessionsSnapshot = await FirebaseFirestore.instance
           .collection('instructor_courses')
           .doc(widget.courseId)
-          .collection('attendance')
-          .orderBy('timestamp', descending: true)
+          .collection('attendance_sessions')
           .get();
 
-      setState(() {
-        _attendanceRecords = querySnapshot.docs.map((doc) {
-          final data = doc.data();
-          return {
+      List<Map<String, dynamic>> allRecords = [];
+
+      // For each attendance session, get all student attendance records
+      for (var sessionDoc in sessionsSnapshot.docs) {
+        final studentsSnapshot = await FirebaseFirestore.instance
+            .collection('instructor_courses')
+            .doc(widget.courseId)
+            .collection('attendance_sessions')
+            .doc(sessionDoc.id)
+            .collection('students')
+            .get();
+
+        for (var studentDoc in studentsSnapshot.docs) {
+          final data = studentDoc.data();
+          // Get check-in or check-out time (whichever is latest)
+          final checkInTime = data['checkInTime'] as Timestamp?;
+          final checkOutTime = data['checkOutTime'] as Timestamp?;
+          final timestamp = checkOutTime ?? checkInTime;
+
+          allRecords.add({
             'regNumber': data['regNumber'] ?? '',
-            'status': data['status'] ?? '',
-            'timestamp': data['timestamp'],
-          };
-        }).toList();
+            'status': data['status'] ?? 'PRESENT',
+            'timestamp': timestamp,
+            'checkInTime': checkInTime,
+            'checkOutTime': checkOutTime,
+          });
+        }
+      }
+
+      // Sort by timestamp (most recent first)
+      allRecords.sort((a, b) {
+        final timestampA = (a['timestamp'] as Timestamp?)?.toDate() ?? DateTime(1970);
+        final timestampB = (b['timestamp'] as Timestamp?)?.toDate() ?? DateTime(1970);
+        return timestampB.compareTo(timestampA);
+      });
+
+      setState(() {
+        _attendanceRecords = allRecords;
 
         // Calculate statistics
         _calculateStatistics();

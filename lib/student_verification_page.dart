@@ -241,38 +241,245 @@ class _StudentVerificationPageState extends State<StudentVerificationPage> {
                   ? Card(
                       elevation: 6,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      color: theme.colorScheme.primary.withOpacity(0.15),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Name: ${_matchedStudent?['name'] ?? ''}',
-                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Registration Number: ${_matchedStudent?['regNumber'] ?? ''}',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Department: ${_matchedStudent?['department'] ?? 'N/A'}',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          ],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          gradient: LinearGradient(
+                            colors: [Colors.green.shade50, Colors.green.shade100],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.shade600,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(Icons.verified_user, color: Colors.white, size: 28),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Student Verified',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.green.shade700,
+                                          ),
+                                        ),
+                                        Text(
+                                          '✓ Fingerprint match successful',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.green.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Divider(height: 24),
+
+                              // Personal Information
+                              Text(
+                                'Personal Information',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple.shade700,
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              _buildInfoRow('Name', _matchedStudent?['name'] ?? ''),
+                              SizedBox(height: 8),
+                              _buildInfoRow('Reg Number', _matchedStudent?['regNumber'] ?? ''),
+                              SizedBox(height: 8),
+                              _buildInfoRow('Department', _matchedStudent?['department'] ?? 'N/A'),
+                              SizedBox(height: 8),
+                              _buildInfoRow('Session', _matchedStudent?['session'] ?? 'N/A'),
+                              SizedBox(height: 16),
+
+                              // Payment Information
+                              Text(
+                                'Payment Information',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple.shade700,
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              _buildPaymentStatusRow(
+                                'Payment Status',
+                                _matchedStudent?['paymentStatus'] ?? 'UNKNOWN',
+                              ),
+                              SizedBox(height: 8),
+                              _buildPaymentInfoRow(
+                                'Total Fees',
+                                _matchedStudent?['totalFees']?.toString() ?? '0.00',
+                                Icons.attach_money,
+                              ),
+                              SizedBox(height: 8),
+                              _buildPaymentInfoRow(
+                                'Due Balance',
+                                _matchedStudent?['dueBalance']?.toString() ?? '0.00',
+                                Icons.money_off,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     )
-                  : Text(
-                      'No student matched',
-                      style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic, color: const Color.fromARGB(255, 0, 0, 0)),
+                  : Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        children: [
+                          Icon(Icons.person_search, size: 80, color: Colors.grey.shade400),
+                          SizedBox(height: 16),
+                          Text(
+                            'No student matched',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Place your finger on the device to verify',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentStatusRow(String label, String status) {
+    Color statusColor;
+    IconData statusIcon;
+
+    if (status == 'CLEARED') {
+      statusColor = Colors.green.shade600;
+      statusIcon = Icons.check_circle;
+    } else if (status == 'PENDING') {
+      statusColor = Colors.orange.shade600;
+      statusIcon = Icons.schedule;
+    } else {
+      // OVERDUE
+      statusColor = Colors.red.shade600;
+      statusIcon = Icons.error_outline;
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: statusColor.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: statusColor, width: 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(statusIcon, color: statusColor, size: 16),
+              SizedBox(width: 6),
+              Text(
+                status,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: statusColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentInfoRow(String label, String value, IconData icon) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: Colors.orange.shade600, size: 18),
+            SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          'AED ${value}',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -14,6 +14,8 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
   String _securityName = 'Security Officer';
   bool _isLoadingName = true;
   int _todayVerifications = 0;
+  int _totalVerifications = 0; // NEW
+  int _thisWeekVerifications = 0; // NEW
   bool _isLoadingStats = true;
 
   @override
@@ -82,24 +84,69 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
       final startOfDay = DateTime(today.year, today.month, today.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      // Query security verifications collection for today's verifications
-      final securityVerificationsSnapshot = await FirebaseFirestore.instance
+      // Query security verifications for today
+      final todaySnapshot = await FirebaseFirestore.instance
           .collection('security_verifications')
           .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
           .where('timestamp', isLessThan: endOfDay)
           .get();
 
+      // Get total verifications all time
+      final totalSnapshot = await FirebaseFirestore.instance
+          .collection('security_verifications')
+          .get();
+
+      // Get this week's verifications
+      final weekAgo = today.subtract(const Duration(days: 7));
+      final weekStartTime = DateTime(weekAgo.year, weekAgo.month, weekAgo.day);
+      final weekSnapshot = await FirebaseFirestore.instance
+          .collection('security_verifications')
+          .where('timestamp', isGreaterThanOrEqualTo: weekStartTime)
+          .get();
+
       setState(() {
-        _todayVerifications = securityVerificationsSnapshot.docs.length;
+        _todayVerifications = todaySnapshot.docs.length;
+        _totalVerifications = totalSnapshot.docs.length;
+        _thisWeekVerifications = weekSnapshot.docs.length;
         _isLoadingStats = false;
       });
     } catch (e) {
       print('Error loading security statistics: $e');
       setState(() {
         _todayVerifications = 0;
+        _totalVerifications = 0;
+        _thisWeekVerifications = 0;
         _isLoadingStats = false;
       });
     }
+  }
+
+  Widget _buildDrawerSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 18,
+            decoration: BoxDecoration(
+              color: Colors.deepPurple,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          SizedBox(width: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -122,27 +169,33 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
         child: Column(
           children: <Widget>[
             DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.deepPurple,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade400],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.security, size: 48, color: Colors.white),
-                  const SizedBox(height: 8),
+                  Icon(Icons.security, size: 48, color: Colors.white),
+                  SizedBox(height: 12),
                   Text(
-                    'Security Panel',
-                    style: const TextStyle(
+                    'Security Portal',
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  SizedBox(height: 4),
                   Text(
                     'Welcome, $_securityName',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 14,
+                      fontSize: 13,
                     ),
                   ),
                 ],
@@ -152,25 +205,29 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
+                  _buildDrawerSectionHeader('VERIFICATION'),
                   ListTile(
-                    leading: const Icon(Icons.verified_user, color: Colors.deepPurple),
-                    title: const Text('Security Verification', style: TextStyle(fontSize: 16)),
-                    subtitle: const Text('Verify students using fingerprint'),
+                    leading: Icon(Icons.verified_user, color: Colors.deepPurple),
+                    title: Text('Verify Students', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Fingerprint verification'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.pushNamed(context, '/security_verification');
                     },
                   ),
-                  const Divider(),
+                  Divider(height: 20),
+                  _buildDrawerSectionHeader('REPORTS'),
                   ListTile(
-                    leading: const Icon(Icons.analytics, color: Colors.deepPurple),
-                    title: const Text('View Statistics', style: TextStyle(fontSize: 16)),
-                    subtitle: const Text('View verification statistics'),
+                    leading: Icon(Icons.analytics, color: Colors.deepPurple),
+                    title: Text('View Statistics', style: TextStyle(fontWeight: FontWeight.w600)),
+                    subtitle: Text('Verification analytics'),
                     onTap: () {
                       Navigator.pop(context);
                       _showStatisticsDialog(context);
                     },
                   ),
+                  Divider(height: 20),
+                  _buildDrawerSectionHeader('SETTINGS'),
                   ListTile(
                     leading: Icon(Icons.settings, color: Colors.deepPurple),
                     title: Text('Settings'),
@@ -182,10 +239,10 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
                 ],
               ),
             ),
-            const Divider(height: 1),
+            Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
+              leading: Icon(Icons.logout, color: Colors.red),
+              title: Text('Logout', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.red)),
               onTap: () async {
                 Navigator.pop(context);
                 await FirebaseAuth.instance.signOut();
@@ -285,15 +342,41 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
                       child: CircularProgressIndicator(),
                     ),
                   )
-                : Row(
+                : Column(
                     children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          'Today\'s Verifications',
-                          _todayVerifications.toString(),
-                          Icons.fingerprint,
-                          Colors.green,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              'Today',
+                              _todayVerifications.toString(),
+                              Icons.calendar_today,
+                              Colors.blue,
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              'This Week',
+                              _thisWeekVerifications.toString(),
+                              Icons.show_chart,
+                              Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              'Total',
+                              _totalVerifications.toString(),
+                              Icons.assessment,
+                              Colors.green,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -302,7 +385,7 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
 
               // Quick Actions
               const Text(
-                '🔧 Quick Actions',
+                '⚡ Quick Actions',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -311,16 +394,42 @@ class _SecurityDashboardPageState extends State<SecurityDashboardPage> {
               ),
               const SizedBox(height: 16),
 
-              Row(
+              GridView.count(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
                 children: [
-                  Expanded(
-                    child: _buildActionCard(
-                      'Security Verification',
-                      'Verify students using fingerprint scanner',
-                      Icons.fingerprint,
-                      Colors.deepPurple,
-                      () => Navigator.pushNamed(context, '/security_verification'),
+                  _buildActionCard(
+                    'Verify Students',
+                    'Fingerprint scan',
+                    Icons.verified_user,
+                    Colors.deepPurple,
+                    () => Navigator.pushNamed(context, '/security_verification'),
+                  ),
+                  _buildActionCard(
+                    'View Reports',
+                    'Statistics',
+                    Icons.assessment,
+                    Colors.orange,
+                    () => _showStatisticsDialog(context),
+                  ),
+                  _buildActionCard(
+                    'Device Status',
+                    'Check device',
+                    Icons.hardware,
+                    Colors.green,
+                    () => ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Device status: Ready')),
                     ),
+                  ),
+                  _buildActionCard(
+                    'Settings',
+                    'Preferences',
+                    Icons.settings,
+                    Colors.red,
+                    () => Navigator.pushNamed(context, '/settings'),
                   ),
                 ],
               ),

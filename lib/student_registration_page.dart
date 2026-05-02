@@ -11,11 +11,17 @@ class _StudentRegistrationPageState extends State<StudentRegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _regNumberController = TextEditingController();
+  final TextEditingController _dueBalanceController = TextEditingController(text: '0');
+  final TextEditingController _totalFeesController = TextEditingController(text: '0');
 
   String _status = 'Idle';
   String? _fingerprintTemplateBase64;
   String? _selectedDepartment;
+  String? _selectedSession;
+  String? _selectedPaymentStatus = 'CLEARED'; // NEW: Payment status
   List<String> _departments = [];
+  List<String> _sessions = ['Day', 'Evening', 'Weekend'];
+  List<String> _paymentStatuses = ['CLEARED', 'PENDING', 'OVERDUE']; // NEW: Payment statuses
 
   @override
   void initState() {
@@ -63,6 +69,12 @@ class _StudentRegistrationPageState extends State<StudentRegistrationPage> {
       });
       return;
     }
+    if (_selectedSession == null) {
+      setState(() {
+        _status = 'Please select a session (Day/Evening/Weekend)';
+      });
+      return;
+    }
     String name = _nameController.text.trim();
     String regNumber = _regNumberController.text.trim();
     String sanitizedRegNumber = regNumber.replaceAll('/', '_');
@@ -72,13 +84,23 @@ class _StudentRegistrationPageState extends State<StudentRegistrationPage> {
         'name': name,
         'regNumber': regNumber,
         'department': _selectedDepartment ?? '',
+        'session': _selectedSession,
         'fingerprintTemplate': _fingerprintTemplateBase64,
+        // NEW: Payment fields
+        'dueBalance': double.parse(_dueBalanceController.text.isEmpty ? '0' : _dueBalanceController.text),
+        'totalFees': double.parse(_totalFeesController.text.isEmpty ? '0' : _totalFeesController.text),
+        'paymentStatus': _selectedPaymentStatus ?? 'CLEARED',
+        'registeredAt': FieldValue.serverTimestamp(),
       });
       setState(() {
         _status = 'Student registered successfully';
         _nameController.clear();
         _regNumberController.clear();
+        _dueBalanceController.text = '0';
+        _totalFeesController.text = '0';
         _selectedDepartment = null;
+        _selectedSession = null;
+        _selectedPaymentStatus = 'CLEARED';
         _fingerprintTemplateBase64 = null;
       });
     } catch (e) {
@@ -198,6 +220,89 @@ class _StudentRegistrationPageState extends State<StudentRegistrationPage> {
                         },
                         validator: (value) =>
                             value == null || value.isEmpty ? 'Select a department' : null,
+                      ),
+                      SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _selectedSession,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: 'Session',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.schedule, color: Colors.deepPurple),
+                        ),
+                        items: _sessions
+                            .map((session) => DropdownMenuItem<String>(
+                                  value: session,
+                                  child: Text(session),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedSession = value;
+                          });
+                        },
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Select a session (Day/Evening/Weekend)' : null,
+                      ),
+                      SizedBox(height: 16),
+                      // NEW: Payment Status
+                      DropdownButtonFormField<String>(
+                        value: _selectedPaymentStatus,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: 'Payment Status',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.payment, color: Colors.deepPurple),
+                        ),
+                        items: _paymentStatuses
+                            .map((status) => DropdownMenuItem<String>(
+                                  value: status,
+                                  child: Text(status),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedPaymentStatus = value;
+                          });
+                        },
+                      ),
+                      SizedBox(height: 16),
+                      // NEW: Total Fees
+                      TextFormField(
+                        controller: _totalFeesController,
+                        decoration: InputDecoration(
+                          labelText: 'Total Fees (Optional)',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.attach_money, color: Colors.deepPurple),
+                          hintText: '0.00',
+                        ),
+                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                        ],
+                      ),
+                      SizedBox(height: 16),
+                      // NEW: Due Balance
+                      TextFormField(
+                        controller: _dueBalanceController,
+                        decoration: InputDecoration(
+                          labelText: 'Due Balance (Optional)',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(Icons.money_off, color: Colors.deepPurple),
+                          hintText: '0.00',
+                        ),
+                        keyboardType: TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                        ],
                       ),
                       SizedBox(height: 20),
                       ElevatedButton(

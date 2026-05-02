@@ -15,10 +15,12 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
   final String _userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
   String _selectedSession = 'Day';
+  int? _selectedCredits; // 10, 15, or 20
   String? _selectedInstructorId;
   List<Map<String, dynamic>> _instructors = [];
   List<String> _departments = [];
   String? _selectedDepartment;
+  int _selectedRegistrationPeriodDays = 3; // NEW: Default 3 days
 
   DateTime? _startDate;
   DateTime? _endDate;
@@ -72,9 +74,9 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
 
   Future<void> _addCourse() async {
     final courseName = _courseNameController.text.trim();
-    if (courseName.isEmpty || _selectedInstructorId == null || _startDate == null || _endDate == null || _selectedDepartment == null || _selectedDepartment!.isEmpty) {
+    if (courseName.isEmpty || _selectedCredits == null || _selectedInstructorId == null || _startDate == null || _endDate == null || _selectedDepartment == null || _selectedDepartment!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all required fields')),
+        SnackBar(content: Text('Please fill all required fields, including valid credits')),
       );
       return;
     }
@@ -87,22 +89,36 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
       );
       final instructorName = instructor['name'] ?? 'Unknown';
 
+      // Calculate registration deadline (createdAt + registration period in days)
+      final now = DateTime.now();
+      final registrationDeadline = now.add(Duration(days: _selectedRegistrationPeriodDays));
+
+      print('DEBUG: Adding course - department: "$_selectedDepartment", session: "$_selectedSession"');
+
       await _firestore.collection('instructor_courses').add({
         'instructorId': _selectedInstructorId,
         'instructorName': instructorName,
         'courseName': courseName,
+        'credits': _selectedCredits,
+        'creditHours': _selectedCredits, // Total days for attendance (10/15/20)
+        'totalDays': _selectedCredits, // Same as creditHours
+        'totalAttendancePercentage': 100, // Always 100% available
         'session': _selectedSession,
         'startDate': _startDate,
         'endDate': _endDate,
         'department': _selectedDepartment,
         'createdAt': FieldValue.serverTimestamp(),
+        'registrationDeadline': registrationDeadline, // NEW: When enrollment closes
+        'registrationPeriodDays': _selectedRegistrationPeriodDays, // NEW: How many days to join
       });
       _courseNameController.clear();
       setState(() {
         _selectedSession = 'Day';
+        _selectedCredits = null;
         _startDate = null;
         _endDate = null;
         _selectedDepartment = null;
+        _selectedRegistrationPeriodDays = 3; // Reset to default
         if (_instructors.isNotEmpty) {
           _selectedInstructorId = _instructors[0]['id'];
         }
@@ -163,6 +179,30 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
                         ),
                         prefixIcon: Icon(Icons.book, color: Colors.deepPurple),
                       ),
+                    ),
+                    SizedBox(height: 16),
+                    DropdownButtonFormField<int>(
+                      value: _selectedCredits,
+                      decoration: InputDecoration(
+                        labelText: 'Credit Hours',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: Icon(Icons.numbers, color: Colors.deepPurple),
+                      ),
+                      items: [10, 15, 20]
+                          .map((credit) => DropdownMenuItem<int>(
+                                value: credit,
+                                child: Text('$credit Credits (${credit} Days)'),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCredits = value;
+                        });
+                      },
+                      validator: (value) =>
+                          value == null ? 'Please select credit hours' : null,
                     ),
                     SizedBox(height: 16),
                     DropdownButtonFormField<String>(
@@ -231,6 +271,28 @@ class _CreateCoursesPageState extends State<CreateCoursesPage> {
                       },
                       validator: (value) =>
                           value == null || value.isEmpty ? 'Select a department' : null,
+                    ),
+                    SizedBox(height: 16),
+                    DropdownButtonFormField<int>(
+                      value: _selectedRegistrationPeriodDays,
+                      decoration: InputDecoration(
+                        labelText: 'Registration Period',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: Icon(Icons.schedule, color: Colors.deepPurple),
+                      ),
+                      items: [3, 7, 14, 21, 30]
+                          .map((days) => DropdownMenuItem<int>(
+                                value: days,
+                                child: Text('$days days'),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedRegistrationPeriodDays = value ?? 3;
+                        });
+                      },
                     ),
                     SizedBox(height: 16),
                     Row(

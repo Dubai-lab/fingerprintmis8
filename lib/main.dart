@@ -12,7 +12,6 @@ import 'invigilator_attendance_report_page.dart';
 import 'login_page.dart';
 import 'change_password_page.dart';
 import 'admin_registration_page.dart';
-import 'attendance_sessions_page.dart';
 import 'attendance_view_page.dart';
 import 'user_management_page.dart';
 import 'security_dashboard_page.dart';
@@ -25,7 +24,6 @@ import 'settings_page.dart';
 import 'change_user_password_page.dart';
 import 'admin_attendance_reports_page.dart';
 import 'manage_departments_page.dart';
-import 'students/dashboard.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +58,6 @@ class MyApp extends StatelessWidget {
         '/fingerprint_enrollment': (context) => FingerprintEnrollmentPage(),
         '/change-password': (context) => const ChangePasswordPage(),
         '/admin_registration': (context) => AdminRegistrationPage(),
-        '/attendance_sessions': (context) => AttendanceSessionsPage(courseId: '', courseName: ''),
         '/attendance_view': (context) => const AttendanceViewPage(),
         '/user_management': (context) => const UserManagementPage(),
         '/security_dashboard': (context) => const SecurityDashboardPage(),
@@ -73,7 +70,6 @@ class MyApp extends StatelessWidget {
         '/change_user_password': (context) => ChangeUserPasswordPage(),
         '/admin_attendance_reports': (context) => const AdminAttendanceReportsPage(),
         '/manage_departments': (context) => const ManageDepartmentsPage(),
-        '/student_dashboard': (context) => const StudentDashboard(),
       },
     );
   }

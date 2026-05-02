@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
-
+ 
 class InvigilatorAttendanceReportPage extends StatefulWidget {
   const InvigilatorAttendanceReportPage({Key? key}) : super(key: key);
 
@@ -74,44 +74,84 @@ class _InvigilatorAttendanceReportPageState extends State<InvigilatorAttendanceR
     });
 
     try {
-      Query<Map<String, dynamic>> query = FirebaseFirestore.instance
-          .collection('invigilator_activities')
-          .doc(_selectedActivity)
-          .collection('attendance');
-
       if (_selectedActivity == 'CAT' || _selectedActivity == 'EXAM') {
-        // Get the courseId from the selected scheduled activity
-        final selectedActivity = _scheduledActivities.firstWhere(
-          (activity) => activity['id'] == _selectedScheduledActivityId,
-        );
-        final courseId = selectedActivity['courseId'];
-        query = query.where('courseId', isEqualTo: courseId);
-      }
+        // For CAT/EXAM: Query from scheduled_activities/{activityId}/attendance
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('scheduled_activities')
+            .doc(_selectedScheduledActivityId)
+            .collection('attendance')
+            .orderBy('timestamp', descending: true)
+            .get();
 
-      final querySnapshot = await query.orderBy('timestamp', descending: true).get();
+        setState(() {
+          _attendanceRecords = querySnapshot.docs.map((doc) {
+            final data = doc.data();
+            final selectedActivityData = _scheduledActivities.firstWhere(
+              (activity) => activity['id'] == _selectedScheduledActivityId,
+              orElse: () => {},
+            );
+            return {
+              'regNumber': data['regNumber'] ?? '',
+              'timestamp': data['timestamp']?.toDate(),
+              'status': data['status'] ?? 'PRESENT',
+              'activity': _selectedActivity ?? '',
+              'courseId': data['courseId'] ?? '',
+              'courseName': selectedActivityData['courseName'] ?? 'Unknown Course',
+            };
+          }).toList();
+          _loading = false;
+        });
+      } else {
+        // For CONFERENCE: Query from scheduled_activities/{activityId}/attendance_sessions/{sessionId}/participants
+        final sessionsSnapshot = await FirebaseFirestore.instance
+            .collection('scheduled_activities')
+            .where('activityType', isEqualTo: 'CONFERENCE')
+            .get();
 
-      setState(() {
-        _attendanceRecords = querySnapshot.docs.map((doc) {
-          final data = doc.data();
-          String courseId = data['courseId'] ?? '';
-          String courseName = '';
-          for (var activity in _scheduledActivities) {
-            if (activity['courseId'] == courseId) {
-              courseName = activity['courseName'];
-              break;
+        List<Map<String, dynamic>> allRecords = [];
+
+        for (var activityDoc in sessionsSnapshot.docs) {
+          final sessionsSubcollection = await FirebaseFirestore.instance
+              .collection('scheduled_activities')
+              .doc(activityDoc.id)
+              .collection('attendance_sessions')
+              .get();
+
+          for (var sessionDoc in sessionsSubcollection.docs) {
+            final participantsSnapshot = await FirebaseFirestore.instance
+                .collection('scheduled_activities')
+                .doc(activityDoc.id)
+                .collection('attendance_sessions')
+                .doc(sessionDoc.id)
+                .collection('participants')
+                .get();
+
+            for (var participantDoc in participantsSnapshot.docs) {
+              final data = participantDoc.data();
+              allRecords.add({
+                'regNumber': data['regNumber'] ?? '',
+                'timestamp': data['timestamp']?.toDate(),
+                'status': data['status'] ?? 'PRESENT',
+                'activity': 'CONFERENCE',
+                'courseId': activityDoc['courseId'] ?? '',
+                'courseName': activityDoc['courseName'] ?? 'Unknown Course',
+              });
             }
           }
-          return {
-            'regNumber': data['regNumber'] ?? '',
-            'timestamp': data['timestamp']?.toDate(),
-            'status': data['status'] ?? '',
-            'activity': data['activity'] ?? '',
-            'courseId': courseId,
-            'courseName': courseName ?? '',
-          };
-        }).toList();
-        _loading = false;
-      });
+        }
+
+        // Sort by timestamp (most recent first)
+        allRecords.sort((a, b) {
+          final timestampA = (a['timestamp'] as DateTime?) ?? DateTime(1970);
+          final timestampB = (b['timestamp'] as DateTime?) ?? DateTime(1970);
+          return timestampB.compareTo(timestampA);
+        });
+
+        setState(() {
+          _attendanceRecords = allRecords;
+          _loading = false;
+        });
+      }
     } catch (e) {
       setState(() {
         _status = 'Failed to load attendance records: $e';

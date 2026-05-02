@@ -78,26 +78,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
         email: email,
         password: tempPassword,
       );
-
+      
       final uid = userCredential.user!.uid;
       final collectionName = _getCollectionName();
 
-      // Save to role-specific collection (flag only)
+      // Save to role-specific collection
       await FirebaseFirestore.instance.collection(collectionName).doc(uid).set({
         'name': name,
         'email': email,
         'role': _selectedRole,
-        'defaultPassword': tempPassword, // flag
-        'passwordSetTime': DateTime.now().toIso8601String(),
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      // Save to users collection (for Cloud Function to send welcome email)
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'name': name,
-        'email': email,
-        'role': _selectedRole,
-        'defaultPassword': tempPassword, // actual temporary password
+        'defaultPassword': tempPassword,
         'passwordSetTime': DateTime.now().toIso8601String(),
         'createdAt': FieldValue.serverTimestamp(),
       });
